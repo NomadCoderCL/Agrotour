@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { API_URL, fetchWithAuth, handleApiError } from '../../lib/utils';
 
 interface Notificacion {
   id: number;
@@ -26,12 +27,9 @@ const Notificaciones: React.FC = () => {
       }
 
       try {
-        const response = await fetch('http://localhost:8000/api/notificaciones/', {
+        const response = await fetchWithAuth(`${API_URL}/api/notificaciones/`, {
           method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${accessToken}`,
-          },
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${accessToken}` },
         });
 
         if (response.ok) {
@@ -47,8 +45,7 @@ const Notificaciones: React.FC = () => {
           setError(errorData.detail || 'Error al obtener las notificaciones.');
         }
       } catch (err: any) {
-        console.error(err);
-        setError(err.message || 'Error al conectarse con el servidor.');
+        handleApiError(err, setError);
       } finally {
         setCargando(false);
       }

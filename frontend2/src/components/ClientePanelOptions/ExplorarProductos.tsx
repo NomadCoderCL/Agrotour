@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useCart } from "../../contexts/CartContext";
 import { useNavigate } from "react-router-dom";
+import { API_URL, fetchWithAuth, handleApiError } from '../../lib/utils';
 
 interface ProductoAPI {
   id: number;
@@ -36,7 +37,7 @@ const ExplorarProductos: React.FC = () => {
       setError(null);
 
       try {
-        const response = await fetch("http://localhost:8000/api/productos/", {
+        const response = await fetchWithAuth(`${API_URL}/api/productos/`, {
           method: "GET",
           headers: {
             "Content-Type": "application/json",
@@ -52,7 +53,7 @@ const ExplorarProductos: React.FC = () => {
         const data: ProductoAPI[] = await response.json();
         setProductosDisponibles(data);
       } catch (err: any) {
-        setError(err.message || "Error al conectarse con el servidor.");
+        handleApiError(err, setError);
       } finally {
         setCargando(false);
       }

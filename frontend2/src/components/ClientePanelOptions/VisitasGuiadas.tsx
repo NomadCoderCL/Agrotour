@@ -3,6 +3,8 @@ import { Map, View } from 'ol';
 import TileLayer from 'ol/layer/Tile';
 import OSM from 'ol/source/OSM';
 import { fromLonLat } from 'ol/proj';
+import './VisitasGuiadas.css';
+import { API_URL, fetchWithAuth, handleApiError } from '../../lib/utils';
 
 interface Producer {
   id: number;
@@ -30,7 +32,7 @@ const VisitasGuiadas = () => {
     // Obtener productores desde la API
     const fetchProducers = async () => {
       try {
-        const response = await fetch('http://localhost:8000/api/producers/', {
+        const response = await fetchWithAuth(`${API_URL}/api/producers/`, {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
@@ -99,7 +101,7 @@ const VisitasGuiadas = () => {
     }
 
     try {
-      const response = await fetch('http://localhost:8000/api/visitas/', {
+      const response = await fetchWithAuth(`${API_URL}/api/visitas/`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -126,7 +128,7 @@ const VisitasGuiadas = () => {
       setNumChildren(0);
     } catch (err: any) {
       console.error(err);
-      setError(err.message || 'Error al conectarse con el servidor.');
+      handleApiError(err, setError);
     }
   };
 
@@ -135,7 +137,7 @@ const VisitasGuiadas = () => {
       <h1 className="text-2xl font-bold mb-4">Visitas Guiadas</h1>
 
       {/* Mapa */}
-      <div ref={mapRef} style={{ height: '400px', width: '100%' }}></div>
+      <div ref={mapRef} className="map-container"></div>
 
       {/* Lista de productores */}
       <div className="mt-4">

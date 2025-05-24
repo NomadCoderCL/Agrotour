@@ -3,6 +3,7 @@ import { Map, View } from "ol";
 import TileLayer from "ol/layer/Tile";
 import OSM from "ol/source/OSM";
 import { fromLonLat } from "ol/proj";
+import './SeguimientoPedidos.css';
 
 const SeguimientoPedidos = () => {
   const [orderStatus, setOrderStatus] = useState("Preparando pedido");
@@ -78,7 +79,7 @@ const SeguimientoPedidos = () => {
           <h2 className="text-xl font-medium text-gray-800 mb-2">
             Ubicación del Pedido
           </h2>
-          <div ref={mapRef} style={{ height: "300px", width: "100%" }}></div>
+          <div ref={mapRef} className="map-container"></div>
         </div>
       </div>
     </div>

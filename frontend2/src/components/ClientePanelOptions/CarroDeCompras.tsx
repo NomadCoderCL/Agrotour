@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCart } from '../../contexts/CartContext';
+import { API_URL, fetchWithAuth, handleApiError } from '../../lib/utils';
 
 const CarroDeCompras: React.FC = () => {
   const { carro, eliminarDelCarro, actualizarCantidad, vaciarCarro } = useCart();
@@ -33,7 +34,7 @@ const CarroDeCompras: React.FC = () => {
     }));
 
     try {
-      const response = await fetch('http://localhost:8000/api/confirmar-compra/', {
+      const response = await fetchWithAuth(`${API_URL}/api/confirmar-compra/`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -54,8 +55,7 @@ const CarroDeCompras: React.FC = () => {
         setError(errorData.error || 'Error al realizar la compra.');
       }
     } catch (err: any) {
-      console.error(err);
-      setError(err.message || 'Error al conectarse con el servidor.');
+      handleApiError(err, setError);
     } finally {
       setCargando(false);
     }

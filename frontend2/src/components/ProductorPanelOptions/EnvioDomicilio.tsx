@@ -10,6 +10,7 @@ import Point from 'ol/geom/Point';
 import VectorLayer from 'ol/layer/Vector';
 import VectorSource from 'ol/source/Vector';
 import { Style, Icon } from 'ol/style';
+import './EnvioDomicilio.css';
 
 // Definir interfaces para los datos
 interface Ubicacion {
@@ -114,7 +115,7 @@ const EnvioDomicilio = () => {
       </div>
 
       <div className="bg-gray-100 rounded-lg shadow-md p-4 h-96">
-        <div ref={mapRef} style={{ width: '100%', height: '100%' }}></div>
+        <div ref={mapRef} className="map-container"></div>
       </div>
     </div>
   );

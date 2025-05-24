@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { API_URL, fetchWithAuth, handleApiError } from '../../lib/utils';
 
 interface OrdenProducto {
   producto: {
@@ -27,7 +28,7 @@ const PurchaseHistory: React.FC = () => {
   useEffect(() => {
     const fetchPurchases = async () => {
       try {
-        const response = await fetch('http://localhost:8000/api/ventas/', {
+        const response = await fetchWithAuth(`${API_URL}/api/ventas/`, {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
@@ -57,7 +58,7 @@ const PurchaseHistory: React.FC = () => {
     setExito(null);
 
     try {
-      const response = await fetch(`http://localhost:8000/api/boleta/${purchase.id}/`, {
+      const response = await fetchWithAuth(`${API_URL}/api/boleta/${purchase.id}/`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -84,7 +85,7 @@ const PurchaseHistory: React.FC = () => {
       }
     } catch (err: any) {
       console.error(err);
-      setErrorBoleta(err.message || 'Error al conectarse con el servidor.');
+      handleApiError(err, setErrorBoleta);
     } finally {
       setCargandoBoleta(false);
     }

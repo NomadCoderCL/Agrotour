@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { API_URL, fetchWithAuth, handleApiError } from '../../lib/utils';
 
 interface Venta {
   id: number;
@@ -23,7 +24,7 @@ const HistorialVentas: React.FC = () => {
   useEffect(() => {
     const obtenerVentas = async () => {
       try {
-        const response = await fetch('http://localhost:8000/api/ventas/', {
+        const response = await fetchWithAuth(`${API_URL}/api/ventas/`, {
           method: 'GET',
           headers: {
             Authorization: `Bearer ${localStorage.getItem('access_token')}`,
@@ -62,7 +63,7 @@ const HistorialVentas: React.FC = () => {
 
   const descargarComprobante = async (id: number) => {
     try {
-      const response = await fetch(`http://localhost:8000/api/boletas/${id}/`, {
+      const response = await fetchWithAuth(`${API_URL}/api/boletas/${id}/`, {
         method: 'GET',
         headers: {
           Authorization: `Bearer ${localStorage.getItem('access_token')}`,

@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { LineChart, XAxis, YAxis, Line, BarChart, Bar } from 'recharts';
+import { API_URL, fetchWithAuth, handleApiError } from '../../lib/utils';
 
 interface ProductoMasVendido {
   name: string;
@@ -33,7 +34,7 @@ const EstadisticasProductor = () => {
     const fetchEstadisticas = async () => {
       setCargando(true);
       try {
-        const ventasResponse = await fetch('http://localhost:8000/estadisticas/ventas/', {
+        const ventasResponse = await fetchWithAuth(`${API_URL}/estadisticas/ventas/`, {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
@@ -48,7 +49,7 @@ const EstadisticasProductor = () => {
         const ventasData = await ventasResponse.json();
         setVentasMensuales(ventasData.mensuales || []);
 
-        const visitasResponse = await fetch('http://localhost:8000/estadisticas/visitas/', {
+        const visitasResponse = await fetchWithAuth(`${API_URL}/estadisticas/visitas/`, {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
@@ -81,7 +82,7 @@ const EstadisticasProductor = () => {
 
   const generarPdf = async () => {
     try {
-      const response = await fetch('http://localhost:8000/estadisticas/descargar-pdf/', {
+      const response = await fetchWithAuth(`${API_URL}/estadisticas/descargar-pdf/`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${accessToken}`,

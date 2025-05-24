@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { API_URL, fetchWithAuth, handleApiError } from '../lib/utils';
 
 interface Producto {
   id: number;
@@ -19,14 +20,14 @@ const Catalogo: React.FC = () => {
     try {
       setCargando(true);
       setError(null);
-      const response = await fetch("http://localhost:8000/api/catalogo/");
+      const response = await fetchWithAuth(`${API_URL}/api/catalogo/`);
       if (!response.ok) {
         throw new Error("Error al obtener productos");
       }
       const data = await response.json();
       setProductos(data);
     } catch (err: any) {
-      setError(err.message);
+      handleApiError(err, setError);
     } finally {
       setCargando(false);
     }

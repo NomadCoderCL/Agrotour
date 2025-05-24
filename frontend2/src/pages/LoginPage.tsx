@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { API_URL, fetchWithAuth, handleApiError } from '../lib/utils';
 
 const LoginPage: React.FC = () => {
   const [username, setUsername] = useState('');
@@ -12,7 +13,7 @@ const LoginPage: React.FC = () => {
     setIsLoading(true);
 
     try {
-      const response = await fetch('http://localhost:8000/auth/login/', {
+      const response = await fetchWithAuth(`${API_URL}/auth/login/`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -50,8 +51,7 @@ const LoginPage: React.FC = () => {
           window.location.href = '/';
       }
     } catch (err: any) {
-      console.error(err);
-      setError(err.message || 'Error al iniciar sesión. Intente nuevamente.');
+      handleApiError(err, setError);
     } finally {
       setIsLoading(false);
     }

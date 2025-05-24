@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { API_URL, fetchWithAuth, handleApiError } from '../lib/utils';
 
 const Registro: React.FC = () => {
   const [nombreUsuario, setNombreUsuario] = useState('');
@@ -44,11 +45,9 @@ const Registro: React.FC = () => {
     };
 
     try {
-      const response = await fetch('http://localhost:8000/auth/registro/', {
+      const response = await fetchWithAuth(`${API_URL}/auth/registro/`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(datos),
       });
 
@@ -62,7 +61,7 @@ const Registro: React.FC = () => {
         setError(errorData.error || 'Error al registrar el usuario.');
       }
     } catch (err) {
-      setError('Error al conectar con el servidor.');
+      handleApiError(err, setError);
     }
   };
 

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { API_URL, fetchWithAuth, handleApiError } from '../../lib/utils';
 
 interface Producto {
   id: number;
@@ -23,7 +24,7 @@ const GestionInventario: React.FC = () => {
     const fetchProductos = async () => {
       setCargando(true);
       try {
-        const response = await fetch('http://localhost:8000/api/productos/', {
+        const response = await fetchWithAuth(`${API_URL}/api/productos/`, {
           headers: {
             Authorization: `Bearer ${accessToken}`,
           },
@@ -58,9 +59,9 @@ const GestionInventario: React.FC = () => {
     try {
       const metodo = formulario.id ? 'PUT' : 'POST';
       const url = formulario.id
-        ? `http://localhost:8000/api/productos/${formulario.id}/`
-        : 'http://localhost:8000/api/productos/';
-      const response = await fetch(url, {
+        ? `${API_URL}/api/productos/${formulario.id}/`
+        : `${API_URL}/api/productos/`;
+      const response = await fetchWithAuth(url, {
         method: metodo,
         headers: {
           'Content-Type': 'application/json',
@@ -92,7 +93,7 @@ const GestionInventario: React.FC = () => {
 
     setCargando(true);
     try {
-      const response = await fetch(`http://localhost:8000/api/productos/${id}/`, {
+      const response = await fetchWithAuth(`${API_URL}/api/productos/${id}/`, {
         method: 'DELETE',
         headers: {
           Authorization: `Bearer ${accessToken}`,
@@ -101,7 +102,7 @@ const GestionInventario: React.FC = () => {
       if (!response.ok) throw new Error('Error al eliminar el producto');
       setProductos((prev) => prev.filter((producto) => producto.id !== id));
     } catch (err: any) {
-      setError(err.message || 'Error al conectarse con el servidor');
+      handleApiError(err, setError);
     } finally {
       setCargando(false);
     }

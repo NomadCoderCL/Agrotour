@@ -22,14 +22,25 @@ from .serializers import (
     CategoriaProductoSerializer, BoletaSerializer, DetalleVentaSerializer, ActividadSerializer,
     PromocionSerializer, EventoTuristicoSerializer
 )
+from rest_framework.pagination import PageNumberPagination
+from rest_framework import filters
+from drf_yasg.utils import swagger_auto_schema
+from drf_yasg import openapi
 
 # Configurar logger
 logger = logging.getLogger(__name__)
+
+# Paginador global para listas grandes
+class StandardResultsSetPagination(PageNumberPagination):
+    page_size = 10
+    page_size_query_param = 'page_size'
+    max_page_size = 100
 
 # ==========================
 # Vistas de Autenticación
 # ==========================
 
+@swagger_auto_schema(method='post', operation_description="Registro de usuario.")
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def registro(request):
@@ -52,6 +63,7 @@ def registro(request):
     except Exception as e:
         return Response({'error': f'Error al registrar el usuario: {str(e)}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
+@swagger_auto_schema(method='post', operation_description="Login de usuario.")
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def login(request):
@@ -76,12 +88,14 @@ def login(request):
 
     return Response({'error': 'Credenciales inválidas.'}, status=status.HTTP_401_UNAUTHORIZED)
 
+@swagger_auto_schema(method='post', operation_description="Validar token JWT.")
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def validate_token(request):
     logger.info(f"Token válido para usuario: {request.user.username}")
     return Response({'message': 'Token válido'}, status=status.HTTP_200_OK)
 
+@swagger_auto_schema(methods=['get', 'put'], operation_description="Ver y actualizar datos del usuario autenticado.")
 @api_view(['GET', 'PUT'])
 @permission_classes([IsAuthenticated])
 def ajustes_usuario(request):
@@ -103,47 +117,42 @@ def ajustes_usuario(request):
 # Vistas de Operaciones
 # ==========================
 
+@swagger_auto_schema(method='post', operation_description="Confirmar compra y registrar venta.")
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def confirmar_compra(request):
     cliente = request.user
     carrito = request.data.get('carrito', [])
-
     if not carrito or not isinstance(carrito, list):
         return Response({'error': 'El carrito está vacío o tiene un formato incorrecto.'}, status=400)
-
     try:
         with transaction.atomic():
             monto_total = 0
             detalles_venta = []
-
             for item in carrito:
-                producto = Producto.objects.get(id=item['producto_id'])
-                cantidad = item['cantidad']
-
-                #if producto.cantidad < cantidad:
-                #    return Response({'error': f"Stock insuficiente para {producto.nombre}."}, status=400)
-
+                producto = Producto.objects.filter(id=item.get('producto_id')).first()
+                cantidad = item.get('cantidad')
+                if not producto or not isinstance(cantidad, int) or cantidad <= 0:
+                    return Response({'error': 'Producto o cantidad inválida.'}, status=400)
+                if producto.cantidad < cantidad:
+                    return Response({'error': f"Stock insuficiente para {producto.nombre}."}, status=400)
                 subtotal = producto.precio * cantidad
                 monto_total += subtotal
-
                 detalles_venta.append(
                     DetalleVenta(producto=producto, cantidad=cantidad, subtotal=subtotal)
                 )
-
             venta = Venta.objects.create(cliente=cliente, monto_total=monto_total, productor=detalles_venta[0].producto.productor)
-
             for detalle in detalles_venta:
                 detalle.venta = venta
                 detalle.save()
                 detalle.producto.cantidad -= detalle.cantidad
                 detalle.producto.save()
-
         return Response({'mensaje': 'Compra confirmada', 'venta_id': venta.id, 'monto_total': monto_total}, status=201)
-
     except Exception as e:
-        return Response({'error': f'Ocurrió un error inesperado: {str(e)}'}, status=500)
+        logger.error(f"Error en confirmar_compra: {str(e)}")
+        return Response({'error': 'Ocurrió un error inesperado.'}, status=500)
 
+@swagger_auto_schema(method='get', operation_description="Catálogo público de productos disponibles.")
 @api_view(['GET'])
 @permission_classes([AllowAny])
 def catalogo_productos(request):
@@ -196,19 +205,50 @@ def user_info(request):
 # ==========================
 
 class ProductoViewSet(viewsets.ModelViewSet):
-    queryset = Producto.objects.all()
     serializer_class = ProductoSerializer
     permission_classes = [IsAuthenticated]
+    pagination_class = StandardResultsSetPagination
+    filter_backends = [filters.SearchFilter, filters.OrderingFilter]
+    search_fields = ['nombre', 'categoria__nombre']
+    ordering_fields = ['nombre', 'precio', 'cantidad']
+    ordering = ['nombre']
+    def get_queryset(self):
+        user = self.request.user
+        if user.rol == 'productor':
+            return Producto.objects.filter(productor=user)
+        elif user.rol == 'cliente':
+            return Producto.objects.filter(cantidad__gt=0)
+        return Producto.objects.none()
 
 class VentaViewSet(viewsets.ModelViewSet):
-    queryset = Venta.objects.all()
     serializer_class = VentaSerializer
     permission_classes = [IsAuthenticated]
+    pagination_class = StandardResultsSetPagination
+    filter_backends = [filters.OrderingFilter]
+    ordering_fields = ['fecha_venta', 'monto_total']
+    ordering = ['-fecha_venta']
+    def get_queryset(self):
+        user = self.request.user
+        if user.rol == 'productor':
+            return Venta.objects.filter(productor=user)
+        elif user.rol == 'cliente':
+            return Venta.objects.filter(cliente=user)
+        return Venta.objects.none()
 
 class VisitaViewSet(viewsets.ModelViewSet):
-    queryset = Visita.objects.all()
     serializer_class = VisitaSerializer
     permission_classes = [IsAuthenticated]
+    pagination_class = StandardResultsSetPagination
+    filter_backends = [filters.OrderingFilter]
+    ordering_fields = ['fecha_visita', 'estado']
+    ordering = ['-fecha_visita']
+    def get_queryset(self):
+        user = self.request.user
+        if user.rol == 'productor':
+            return Visita.objects.filter(productor=user)
+        elif user.rol == 'cliente':
+            return Visita.objects.filter(cliente=user)
+        return Visita.objects.none()
 
 class AnuncioViewSet(viewsets.ModelViewSet):
     queryset = Anuncio.objects.all()
@@ -251,14 +291,20 @@ class PromocionViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
 
 class EventoTuristicoViewSet(viewsets.ModelViewSet):
-    queryset = EventoTuristico.objects.all()
     serializer_class = EventoTuristicoSerializer
     permission_classes = [IsAuthenticated]
-
-class ActividadViewSet(viewsets.ModelViewSet):
-    queryset = Actividad.objects.all()
-    serializer_class = ActividadSerializer
-    permission_classes = [IsAuthenticated]
+    pagination_class = StandardResultsSetPagination
+    filter_backends = [filters.SearchFilter, filters.OrderingFilter]
+    search_fields = ['titulo', 'descripcion']
+    ordering_fields = ['fecha_evento', 'precio_entrada']
+    ordering = ['fecha_evento']
+    def get_queryset(self):
+        user = self.request.user
+        if user.rol == 'productor':
+            return EventoTuristico.objects.filter(productor=user)
+        elif user.rol == 'cliente':
+            return EventoTuristico.objects.all()
+        return EventoTuristico.objects.none()
     
 class ProducerViewSet(ModelViewSet):
     queryset = Usuario.objects.filter(rol='productor')

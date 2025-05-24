@@ -1,9 +1,9 @@
 // src/components/PrivateRoute.tsx
-import React from 'react';
+import React, { ReactNode } from 'react';
 import { Navigate } from 'react-router-dom';
 
 interface PrivateRouteProps {
-  children: JSX.Element;
+  children: ReactNode;
   allowedRoles: string[];
 }
 
