@@ -305,7 +305,27 @@ class EventoTuristicoViewSet(viewsets.ModelViewSet):
         elif user.rol == 'cliente':
             return EventoTuristico.objects.all()
         return EventoTuristico.objects.none()
-    
+
+class ActividadViewSet(viewsets.ModelViewSet):
+    """CRUD de actividades del sistema.
+
+    Los usuarios administradores pueden ver todas las actividades,
+    mientras que los demás solo consultan las propias.
+    """
+    serializer_class = ActividadSerializer
+    permission_classes = [IsAuthenticated]
+    pagination_class = StandardResultsSetPagination
+    filter_backends = [filters.SearchFilter, filters.OrderingFilter]
+    search_fields = ["tipo", "detalle"]
+    ordering_fields = ["fecha"]
+    ordering = ["-fecha"]
+
+    def get_queryset(self):
+        user = self.request.user
+        if getattr(user, "rol", "") == "admin":
+            return Actividad.objects.all()
+        return Actividad.objects.filter(usuario=user)
+
 class ProducerViewSet(ModelViewSet):
     queryset = Usuario.objects.filter(rol='productor')
     serializer_class = UsuarioSerializer
