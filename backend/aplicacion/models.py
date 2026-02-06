@@ -41,6 +41,7 @@ class Producto(models.Model):
     categoria = models.ForeignKey(CategoriaProducto, on_delete=models.SET_NULL, null=True, blank=True)
     productor = models.ForeignKey(Usuario, on_delete=models.CASCADE, limit_choices_to={'rol': 'productor'})
     metodo_venta = models.CharField(max_length=10, choices=METODO_VENTA_CHOICES, default='unidad')
+    factor_carbono = models.ForeignKey('FactorCarbono', on_delete=models.SET_NULL, null=True, blank=True)
 
     def __str__(self):
         return self.nombre
@@ -67,6 +68,11 @@ class Venta(models.Model):
     )
     fecha_venta = models.DateTimeField(auto_now_add=True)
     monto_total = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+    
+    # Nuevos campos para Fase 1
+    cupon_aplicado = models.ForeignKey('Cupon', on_delete=models.SET_NULL, null=True, blank=True)
+    descuento_cupon = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+    huella_carbono_total = models.DecimalField(max_digits=10, decimal_places=5, default=0.00000, help_text="Total kg CO2")
 
     def __str__(self):
         return f"Venta {self.id} - {self.cliente.username} a {self.productor.username}"
@@ -83,13 +89,14 @@ class DetalleVenta(models.Model):
 
 # Modelo Boleta
 class Boleta(models.Model):
-    numero_boleta = models.CharField(max_length=50, unique=True)
-    fecha_emision = models.DateTimeField(auto_now_add=True)
+    venta = models.OneToOneField(Venta, on_delete=models.CASCADE, related_name='boleta')
+    numero_boleta = models.CharField(max_length=50, unique=True, db_index=True)
+    fecha_emision = models.DateTimeField(auto_now_add=True, db_index=True)
     monto_total = models.DecimalField(max_digits=10, decimal_places=2)
     impuestos = models.DecimalField(max_digits=10, decimal_places=2, default=0)
 
     def __str__(self):
-        return f"Boleta {self.numero_boleta}"
+        return f"Boleta {self.numero_boleta} (Venta {self.venta.id})"
 
 # Modelo Promoción
 class Promocion(models.Model):
@@ -207,4 +214,37 @@ class Actividad(models.Model):
 
     def __str__(self):
         return f"Actividad {self.tipo} - {self.usuario.username}"
+
+# Modelo Cupón para descuentos por código
+class Cupon(models.Model):
+    TIPO_CHOICES = [
+        ('porcentaje', 'Porcentaje'),
+        ('monto_fijo', 'Monto Fijo'),
+    ]
+    codigo = models.CharField(max_length=50, unique=True)
+    tipo = models.CharField(max_length=15, choices=TIPO_CHOICES, default='porcentaje')
+    valor = models.DecimalField(max_digits=10, decimal_places=2)
+    fecha_inicio = models.DateTimeField()
+    fecha_fin = models.DateTimeField()
+    activo = models.BooleanField(default=True)
+    limite_uso = models.PositiveIntegerField(default=1)
+    conteo_uso = models.PositiveIntegerField(default=0)
+    productor = models.ForeignKey(Usuario, on_delete=models.CASCADE, limit_choices_to={'rol': 'productor'}, null=True, blank=True)
+
+    def __str__(self):
+        return f"Cupón: {self.codigo} ({self.valor})"
+
+    def es_valido(self):
+        from django.utils import timezone
+        ahora = timezone.now()
+        return self.activo and self.fecha_inicio <= ahora <= self.fecha_fin and self.conteo_uso < self.limite_uso
+
+# Modelo para factores de Huella de Carbono
+class FactorCarbono(models.Model):
+    categoria = models.CharField(max_length=100, unique=True) # e.g., "Frutas", "Transporte Local"
+    co2_por_unidad = models.DecimalField(max_digits=10, decimal_places=5) # kg CO2
+    unidad = models.CharField(max_length=20, default='kg') # kg, km, etc.
+
+    def __str__(self):
+        return f"{self.categoria}: {self.co2_por_unidad} CO2/{self.unidad}"
 

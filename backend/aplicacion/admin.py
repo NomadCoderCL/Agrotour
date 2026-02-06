@@ -1,7 +1,8 @@
 from django.contrib import admin
 from .models import (
     Usuario, CategoriaProducto, Producto, Venta, DetalleVenta, Boleta,
-    Promocion, Visita, EventoTuristico, Feedback, Envio, Notificacion
+    Promocion, Visita, EventoTuristico, Feedback, Envio, Notificacion,
+    Cupon, FactorCarbono
 )
 
 @admin.register(Usuario)
@@ -24,9 +25,20 @@ class ProductoAdmin(admin.ModelAdmin):
 
 @admin.register(Venta)
 class VentaAdmin(admin.ModelAdmin):
-    list_display = ('id', 'cliente', 'productor', 'fecha_venta', 'monto_total')
+    list_display = (
+        'id', 'cliente', 'productor', 'fecha_venta', 
+        'monto_total', 'descuento_cupon', 'huella_carbono_total'
+    )
     search_fields = ('cliente__username', 'productor__username')
     list_filter = ('fecha_venta',)
+
+    def changelist_view(self, request, extra_context=None):
+        from django.db.models import Sum
+        extra_context = extra_context or {}
+        # Resumen Rápido para el dashboard
+        extra_context['total_ventas_monto'] = Venta.objects.aggregate(Sum('monto_total'))['monto_total__sum'] or 0
+        extra_context['total_co2_ahorrado'] = Venta.objects.aggregate(Sum('huella_carbono_total'))['huella_carbono_total__sum'] or 0
+        return super().changelist_view(request, extra_context=extra_context)
 
 @admin.register(DetalleVenta)
 class DetalleVentaAdmin(admin.ModelAdmin):
@@ -73,3 +85,14 @@ class NotificacionAdmin(admin.ModelAdmin):
     list_display = ('usuario', 'tipo', 'mensaje', 'leido', 'fecha_creacion')
     search_fields = ('usuario__username', 'tipo', 'mensaje')
     list_filter = ('leido', 'fecha_creacion')
+
+@admin.register(Cupon)
+class CuponAdmin(admin.ModelAdmin):
+    list_display = ('codigo', 'tipo', 'valor', 'fecha_fin', 'activo', 'conteo_uso', 'limite_uso')
+    search_fields = ('codigo',)
+    list_filter = ('activo', 'tipo')
+
+@admin.register(FactorCarbono)
+class FactorCarbonoAdmin(admin.ModelAdmin):
+    list_display = ('categoria', 'co2_por_unidad', 'unidad')
+    search_fields = ('categoria',)

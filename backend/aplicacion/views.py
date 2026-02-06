@@ -14,7 +14,8 @@ from datetime import datetime
 import logging
 from .models import (
     Usuario, Producto, Venta, Visita, Anuncio, Feedback, Envio, Ubicacion, Notificacion,
-    CategoriaProducto, Boleta, DetalleVenta, EventoTuristico, Actividad, Promocion
+    CategoriaProducto, Boleta, DetalleVenta, EventoTuristico, Actividad, Promocion,
+    Cupon, FactorCarbono
 )
 from .serializers import (
     UsuarioSerializer, ProductoSerializer, VentaSerializer, VisitaSerializer, AnuncioSerializer,
@@ -123,34 +124,88 @@ def ajustes_usuario(request):
 def confirmar_compra(request):
     cliente = request.user
     carrito = request.data.get('carrito', [])
+    codigo_cupon = request.data.get('codigo_cupon')
+    
     if not carrito or not isinstance(carrito, list):
         return Response({'error': 'El carrito está vacío o tiene un formato incorrecto.'}, status=400)
+    
     try:
         with transaction.atomic():
-            monto_total = 0
+            monto_subtotal = 0
+            huella_total = 0
             detalles_venta = []
+            
+            # 1. Procesar Carrito y Huella de Carbono
             for item in carrito:
-                producto = Producto.objects.filter(id=item.get('producto_id')).first()
+                producto = Producto.objects.select_related('factor_carbono').filter(id=item.get('producto_id')).first()
                 cantidad = item.get('cantidad')
-                if not producto or not isinstance(cantidad, int) or cantidad <= 0:
+                
+                if not producto or not isinstance(cantidad, (int, float)) or cantidad <= 0:
                     return Response({'error': 'Producto o cantidad inválida.'}, status=400)
+                
                 if producto.cantidad < cantidad:
                     return Response({'error': f"Stock insuficiente para {producto.nombre}."}, status=400)
+                
                 subtotal = producto.precio * cantidad
-                monto_total += subtotal
+                monto_subtotal += subtotal
+                
+                # Calcular Huella de Carbono si el producto tiene factor asignado
+                if producto.factor_carbono:
+                    from decimal import Decimal
+                    huella_total += Decimal(cantidad) * producto.factor_carbono.co2_por_unidad
+                
                 detalles_venta.append(
                     DetalleVenta(producto=producto, cantidad=cantidad, subtotal=subtotal)
                 )
-            venta = Venta.objects.create(cliente=cliente, monto_total=monto_total, productor=detalles_venta[0].producto.productor)
+            
+            # 2. Manejo de Cupón
+            descuento_valor = 0
+            cupon_obj = None
+            if codigo_cupon:
+                cupon_obj = Cupon.objects.filter(codigo=codigo_cupon).first()
+                if cupon_obj and cupon_obj.es_valido():
+                    if cupon_obj.tipo == 'porcentaje':
+                        descuento_valor = (monto_subtotal * cupon_obj.valor) / 100
+                    else:
+                        descuento_valor = cupon_obj.valor
+                    
+                    # Incrementar uso del cupón
+                    cupon_obj.conteo_uso += 1
+                    cupon_obj.save()
+                else:
+                    return Response({'error': 'Cupón inválido o expirado.'}, status=400)
+
+            monto_final = monto_subtotal - descuento_valor
+            if monto_final < 0: monto_final = 0
+
+            # 3. Crear Venta
+            venta = Venta.objects.create(
+                cliente=cliente, 
+                productor=detalles_venta[0].producto.productor,
+                monto_total=monto_final,
+                cupon_aplicado=cupon_obj,
+                descuento_cupon=descuento_valor,
+                huella_carbono_total=huella_total
+            )
+            
             for detalle in detalles_venta:
                 detalle.venta = venta
                 detalle.save()
                 detalle.producto.cantidad -= detalle.cantidad
                 detalle.producto.save()
-        return Response({'mensaje': 'Compra confirmada', 'venta_id': venta.id, 'monto_total': monto_total}, status=201)
+                
+        return Response({
+            'mensaje': 'Compra confirmada', 
+            'venta_id': venta.id, 
+            'subtotal': monto_subtotal,
+            'descuento': descuento_valor,
+            'monto_total': monto_final,
+            'huella_carbono': huella_total
+        }, status=201)
+        
     except Exception as e:
         logger.error(f"Error en confirmar_compra: {str(e)}")
-        return Response({'error': 'Ocurrió un error inesperado.'}, status=500)
+        return Response({'error': f'Ocurrió un error inesperado: {str(e)}'}, status=500)
 
 @swagger_auto_schema(method='get', operation_description="Catálogo público de productos disponibles.")
 @api_view(['GET'])
@@ -251,29 +306,48 @@ class VisitaViewSet(viewsets.ModelViewSet):
         return Visita.objects.none()
 
 class AnuncioViewSet(viewsets.ModelViewSet):
-    queryset = Anuncio.objects.all()
     serializer_class = AnuncioSerializer
     permission_classes = [IsAuthenticated]
+    def get_queryset(self):
+        # Anuncios might be public or internal, assuming 'read' for all auth users, 'write' for admin?
+        # For now, let's keep it visible to all auth users, but maybe restrict creation?
+        return Anuncio.objects.all()
 
 class FeedbackViewSet(viewsets.ModelViewSet):
-    queryset = Feedback.objects.all()
     serializer_class = FeedbackSerializer
     permission_classes = [IsAuthenticated]
+    def get_queryset(self):
+        user = self.request.user
+        if user.rol == 'admin':
+            return Feedback.objects.all()
+        return Feedback.objects.filter(usuario=user)
 
 class EnvioViewSet(viewsets.ModelViewSet):
-    queryset = Envio.objects.all()
     serializer_class = EnvioSerializer
     permission_classes = [IsAuthenticated]
+    def get_queryset(self):
+        user = self.request.user
+        if user.rol == 'productor':
+            # Assuming envios are related to ventas/productor logic, 
+            # effectively logic usually links Envio -> Venta -> Productor
+            # This is complex without direct 'productor' field, but let's check model.
+            # If Envio has 'venta', and Venta has 'productor'.
+            return Envio.objects.filter(venta__productor=user)
+        elif user.rol == 'cliente':
+            return Envio.objects.filter(venta__cliente=user)
+        return Envio.objects.none()
 
 class UbicacionViewSet(viewsets.ModelViewSet):
     queryset = Ubicacion.objects.all()
     serializer_class = UbicacionSerializer
     permission_classes = [IsAuthenticated]
+    # Ubicaciones might be public for maps?
 
 class NotificacionViewSet(viewsets.ModelViewSet):
-    queryset = Notificacion.objects.all()
     serializer_class = NotificacionSerializer
     permission_classes = [IsAuthenticated]
+    def get_queryset(self):
+        return Notificacion.objects.filter(usuario=self.request.user)
 
 class CategoriaProductoViewSet(viewsets.ModelViewSet):
     queryset = CategoriaProducto.objects.all()
@@ -281,9 +355,15 @@ class CategoriaProductoViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
 
 class BoletaViewSet(viewsets.ModelViewSet):
-    queryset = Boleta.objects.all()
     serializer_class = BoletaSerializer
     permission_classes = [IsAuthenticated]
+    def get_queryset(self):
+        user = self.request.user
+        if user.rol == 'productor':
+            return Boleta.objects.filter(venta__productor=user)
+        elif user.rol == 'cliente':
+            return Boleta.objects.filter(venta__cliente=user)
+        return Boleta.objects.none()
 
 class PromocionViewSet(viewsets.ModelViewSet):
     queryset = Promocion.objects.all()
@@ -310,6 +390,16 @@ class ProducerViewSet(ModelViewSet):
     queryset = Usuario.objects.filter(rol='productor')
     serializer_class = UsuarioSerializer
     permission_classes = [IsAuthenticated]
+
+class ActividadViewSet(viewsets.ModelViewSet):
+    queryset = Actividad.objects.all()
+    serializer_class = ActividadSerializer
+    permission_classes = [IsAuthenticated]
+    def get_queryset(self):
+        user = self.request.user
+        if user.rol == 'admin':
+            return Actividad.objects.all()
+        return Actividad.objects.filter(usuario=user)
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
@@ -355,7 +445,88 @@ def descargar_estadisticas_pdf(request):
 def obtener_boleta(request, pk):
     try:
         boleta = Boleta.objects.get(pk=pk)
+        # Security check: only allow if user is related to venta
+        user = request.user
+        if user.rol == 'productor' and boleta.venta.productor != user:
+             return Response({'error': 'No autorizado'}, status=403)
+        if user.rol == 'cliente' and boleta.venta.cliente != user:
+             return Response({'error': 'No autorizado'}, status=403)
+             
         serializer = BoletaSerializer(boleta)
         return Response(serializer.data, status=200)
     except Boleta.DoesNotExist:
         return Response({'error': 'Boleta no encontrada'}, status=404)
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def descargar_boleta_pdf(request, pk):
+    try:
+        boleta = Boleta.objects.get(pk=pk)
+        venta = boleta.venta
+        user = request.user
+
+        # Security Check
+        if user.rol == 'productor' and venta.productor != user:
+             return Response({'error': 'No autorizado'}, status=403)
+        if user.rol == 'cliente' and venta.cliente != user:
+             return Response({'error': 'No autorizado'}, status=403)
+
+        buffer = BytesIO()
+        pdf = canvas.Canvas(buffer)
+        pdf.setTitle(f"Boleta-{boleta.numero_boleta}")
+        
+        # Header
+        pdf.setFont("Helvetica-Bold", 16)
+        pdf.drawString(100, 800, "AGROTOUR - Comprobante de Venta")
+        
+        pdf.setFont("Helvetica", 12)
+        pdf.drawString(100, 770, f"N° Boleta: {boleta.numero_boleta}")
+        pdf.drawString(100, 750, f"Fecha: {boleta.fecha_emision.strftime('%d/%m/%Y %H:%M')}")
+        
+        pdf.drawString(100, 720, f"Cliente: {venta.cliente.username}")
+        pdf.drawString(100, 700, f"Productor: {venta.productor.username}")
+        
+        # Detalle
+        y = 660
+        pdf.drawString(100, y, "Detalle de Productos:")
+        y -= 20
+        detalles = DetalleVenta.objects.filter(venta=venta)
+        
+        for det in detalles:
+            line = f"- {det.producto.nombre} (x{det.cantidad}) : ${det.subtotal:.2f}"
+            pdf.drawString(120, y, line)
+            y -= 20
+            
+        # Totales
+        y -= 20
+        pdf.setFont("Helvetica-Bold", 12)
+        pdf.drawString(100, y, f"Total Pagado: ${venta.monto_total:.2f}")
+        
+        pdf.save()
+        buffer.seek(0)
+        response = HttpResponse(buffer, content_type='application/pdf')
+        response['Content-Disposition'] = f'attachment; filename="boleta_{boleta.numero_boleta}.pdf"'
+        return response
+
+    except Boleta.DoesNotExist:
+        return Response({'error': 'Boleta no encontrada'}, status=404)
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def health_check_live(request):
+    """Liveness check for basic service responsiveness."""
+    return Response({'status': 'live', 'timestamp': datetime.now()}, status=status.HTTP_200_OK)
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def health_check_ready(request):
+    """Readiness check for database and core service availability."""
+    from django.db import connections
+    from django.db.utils import OperationalError
+    db_conn = connections['default']
+    try:
+        db_conn.cursor()
+    except OperationalError:
+        return Response({'status': 'unready', 'reason': 'database_unavailable'}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+    
+    return Response({'status': 'ready', 'timestamp': datetime.now()}, status=status.HTTP_200_OK)
