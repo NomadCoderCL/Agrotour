@@ -33,7 +33,13 @@ from .views import (
     ubicaciones_productores,
     ProducerViewSet,
     user_info,
+    health_check_live,
+    health_check_ready,
+    obtener_boleta,
+    descargar_boleta_pdf,
 )
+from .views_images import ImageUploadView
+from .views_auth import GoogleLogin, FacebookLogin
 
 # Router para los ViewSets
 router = DefaultRouter()
@@ -99,4 +105,17 @@ urlpatterns = [
     path('auth/userinfo/', user_info, name='userinfo'),
 
     path('api/', include(router.urls)),
+    
+    # Auth Endpoints
+    path('auth/', include('dj_rest_auth.urls')),
+    path('auth/registration/', include('dj_rest_auth.registration.urls')),
+    path('auth/google/', GoogleLogin.as_view(), name='google_login'),
+    path('auth/facebook/', FacebookLogin.as_view(), name='facebook_login'),
+
+    # Health checks
+    path('boleta/<int:pk>/', obtener_boleta, name='obtener_boleta'),
+    path('boleta/<int:pk>/pdf/', descargar_boleta_pdf, name='descargar_boleta_pdf'),
+    path('api/upload-image/', ImageUploadView.as_view(), name='image_upload'),
+    path('health/live/', health_check_live, name='health_check_live'),
+    path('health/ready/', health_check_ready, name='health_check_ready'),
 ]
