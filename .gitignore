@@ -36,3 +36,8 @@ coverage.xml
 db.sqlite3
 media/
 static_root/
+
+# Documentation (Internal only)
+*.md
+!README.md
+!readme.md

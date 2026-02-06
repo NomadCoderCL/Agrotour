@@ -1,170 +1,104 @@
-# Agrotour
+# 🌿 Agrotour - Plataforma de Agroturismo Offline-First
 
-**Repositorio:** [NomadCoderCL/Agrotour](https://github.com/NomadCoderCL/Agrotour)
+[![Django](https://img.shields.io/badge/Backend-Django%205.2-092E20?logo=django)](https://www.djangoproject.com/)
+[![FastAPI](https://img.shields.io/badge/Sync-FastAPI-009688?logo=fastapi)](https://fastapi.tiangolo.com/)
+[![React](https://img.shields.io/badge/Frontend-React%2018-61DAFB?logo=react)](https://reactjs.org/)
+[![PostgreSQL](https://img.shields.io/badge/DB-PostgreSQL%20RLS-336791?logo=postgresql)](https://www.postgresql.org/)
+[![License](https://img.shields.io/badge/License-Proprietary-red)](#)
 
----
-
-## Descripción General
-
-Agrotour es una plataforma orientada a la promoción y gestión del turismo rural y agroturismo, facilitando la conexión entre turistas y emprendimientos agrícolas. Este proyecto busca digitalizar la oferta turística rural, proporcionando herramientas tanto para usuarios (turistas) como para administradores y propietarios de emprendimientos.
-
----
-
-## Tabla de Contenidos
-
-- [Características principales](#características-principales)
-- [Arquitectura del Proyecto](#arquitectura-del-proyecto)
-- [Tecnologías Utilizadas](#tecnologías-utilizadas)
-- [Instalación y Puesta en Marcha](#instalación-y-puesta-en-marcha)
-- [Estructura de Carpetas](#estructura-de-carpetas)
-- [Comandos Útiles](#comandos-útiles)
-- [Guía de Contribución](#guía-de-contribución)
-- [Licencia](#licencia)
+Agrotour es una ecosistema digital diseñado para revitalizar el turismo rural, permitiendo a los productores locales gestionar sus emprendimientos con tecnología de vanguardia, incluso en zonas con conectividad limitada. 
 
 ---
 
-## Características principales
+## 🚀 Características Principales (Fase 1)
 
-- Registro y autenticación de usuarios.
-- Panel de control para administradores y propietarios.
-- Catálogo de experiencias y servicios rurales.
-- Búsqueda y filtrado de actividades.
-- Integración de mapas interactivos para geolocalización de emprendimientos.
-- Sistema de reservas y contacto directo.
-- Estadísticas y reportes para administradores.
-- Interfaz moderna y responsiva.
+### 🛡️ Multi-Tenancy Estricto (RLS)
+Arquitectura de aislamiento de datos nivel Enterprise. Utilizamos **Row-Level Security (RLS)** nativo de PostgreSQL para asegurar que cada productor solo acceda a su propia información, garantizando privacidad y seguridad total.
 
----
+### 🔄 Sync Engine Offline-First
+Motor de sincronización híbrido desarrollado con **FastAPI**. Permite registrar ventas e inventario sin conexión a internet, sincronizando automáticamente los datos cuando se recupera la señal, utilizando un algoritmo inteligente de resolución de conflictos.
 
-## Arquitectura del Proyecto
+### 🔔 Notificaciones Real-Time
+Comunicación bidireccional mediante **WebSockets (Django Channels + Redis)**. Alertas instantáneas para pedidos, stock bajo y actualizaciones del sistema.
 
-El proyecto está dividido en _frontend_ y _backend_:
+### 📸 Optimización de Medios
+Sistema de carga de imágenes con **compresión inteligente (Pillow)**. Las fotos se optimizan automáticamente a <200KB para asegurar un rendimiento óptimo en redes móviles rurales.
 
-- **Frontend** (`frontend2`): Aplicación web basada en React, utilizando TypeScript y TailwindCSS para una experiencia de usuario moderna, rápida y móvil.
-- **Backend** (`backend`): API desarrollada en Python, probablemente con Django, que expone los servicios necesarios para la gestión de usuarios, experiencias y reservas.
+### 🔐 Autenticación Universal
+Acceso seguro mediante **JWT** e integración con **OAuth2 (Google y Facebook)** para una experiencia de usuario fluida.
 
----
-
-## Tecnologías Utilizadas
-
-### Frontend
-
-- **React** 18+
-- **TypeScript**
-- **TailwindCSS**
-- **Radix UI** (componentes accesibles)
-- **React Router DOM**
-- **Leaflet** y **React-Leaflet** (mapas)
-- **Socket.io-client** (comunicación en tiempo real)
-- **Styled Components**
-- **Recharts** (gráficos)
-- **Axios** (peticiones HTTP)
-
-### Backend
-
-- **Python** (posiblemente Django)
-- **SQLite** (base de datos por defecto)
-- **Estructura modular por aplicaciones**
+### 🌿 Sostenibilidad e IA
+*   **Huella de Carbono:** Cálculo automático de kg de CO2 "ahorrados" por cada venta local.
+*   **Gestión de Cupones:** Sistema dinámico de descuentos (Fijo/Porcentaje).
+*   **Tareas Asíncronas:** Workers de **Celery** para procesos pesados y recordatorios automáticos.
 
 ---
 
-## Instalación y Puesta en Marcha
+## 🛠️ Stack Tecnológico
 
-### Prerrequisitos
+### Backend Core
+- **Django 5.2.1** (Business Logic & Admin)
+- **FastAPI** (High-Performance Sync Engine)
+- **Celery & Redis** (Task Queue & Caching)
+- **Django Channels** (WebSockets)
+- **Python-Pillow** (Image Processing)
 
-- Node.js >= 18
-- Python >= 3.9
-- Yarn o NPM
-- pipenv/venv recomendado para backend
+### Frontend Core
+- **React 18** + **TypeScript**
+- **Tailwind CSS** + **Radix UI**
+- **Dexie.js** (IndexedDB para almacenamiento offline)
+- **Playwright** (E2E Testing)
 
-### Clonar el Repositorio
+---
+
+## 📂 Estructura del Proyecto
 
 ```bash
-git clone https://github.com/NomadCoderCL/Agrotour.git
-cd Agrotour
-```
-
-### Frontend
-
-```bash
-cd frontend2
-npm install      # o yarn
-npm run start    # o yarn start
-```
-
-### Backend
-
-```bash
-cd backend
-python -m venv venv
-source venv/bin/activate
-pip install -r requirements.txt  # si existe
-python manage.py migrate
-python manage.py runserver
-```
-
----
-
-## Estructura de Carpetas
-
-```
 Agrotour/
-│
-├── backend/
-│   ├── agrotour_backend/    # Lógica principal del backend
-│   ├── aplicacion/          # Aplicaciones específicas del proyecto
-│   ├── db.sqlite3           # Base de datos local
-│   └── manage.py            # Script de gestión Django
-│
-├── frontend2/
-│   ├── src/                 # Código fuente de React
-│   ├── public/              # Archivos públicos y estáticos
-│   ├── package.json         # Configuración y dependencias
-│   ├── tailwind.config.js   # Configuración TailwindCSS
-│   └── .env                 # Variables de entorno
-│
-├── package.json             # Configuración global del monorepo (si aplica)
-└── package-lock.json        # Bloqueo de dependencias
+├── backend/            # API Core (Django)
+│   ├── agrotour_backend/ # Configuración y Celery
+│   └── aplicacion/      # Modelos, Vistas y Lógica de Negocio
+├── backend-sync/       # Motor de Sincronización (FastAPI)
+├── frontend2/          # Aplicación Web (React)
+└── README.md           # Documentación Principal
 ```
 
 ---
 
-## Comandos Útiles
+## ⚙️ Instalación Rápida
 
-### Frontend
+1. **Clonar el repositorio:**
+   ```bash
+   git clone https://github.com/NomadCoderCL/Agrotour.git
+   ```
 
-- `npm run start` - Inicia la app en modo desarrollo.
-- `npm run build` - Construye la app para producción.
-- `npm run test`  - Ejecuta pruebas.
+2. **Backend (Django):**
+   ```bash
+   cd backend
+   pip install -r requirements.txt
+   python manage.py migrate
+   python manage.py runserver
+   ```
 
-### Backend (Django)
+3. **Backend Sync (FastAPI):**
+   ```bash
+   cd backend-sync
+   pip install -r requirements.txt
+   uvicorn main:app --reload --port 8001
+   ```
 
-- `python manage.py runserver` - Inicia el servidor local.
-- `python manage.py migrate`   - Aplica migraciones a la base de datos.
-- `python manage.py createsuperuser` - Crea un usuario administrador.
-
----
-
-## Guía de Contribución
-
-1. Haz un fork del proyecto.
-2. Crea un branch (`git checkout -b feature/nueva-funcionalidad`)
-3. Realiza tus cambios y haz commit.
-4. Haz push a tu fork y abre un Pull Request.
-5. Describe claramente tu contribución.
-
----
-
-## Licencia
-
-Actualmente este proyecto **no tiene licencia definida**. Contacta al autor para consultas sobre uso y distribución.
-
----
-
-## Autor
-
-[NomadCoderCL](https://github.com/NomadCoderCL)
+4. **Frontend (React):**
+   ```bash
+   cd frontend2
+   npm install
+   npm run start
+   ```
 
 ---
 
-_¿Preguntas o sugerencias? ¡Abre una issue o contáctanos!_
+## 👥 Autor
+Desarrollado con ❤️ por **NomadCoderCL**. 
+Para consultas sobre el proyecto, visita mi perfil en [GitHub](https://github.com/NomadCoderCL).
+
+---
+_Agrotour: Empoderando al agro con tecnología de clase mundial._
