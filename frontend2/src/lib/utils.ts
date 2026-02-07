@@ -7,7 +7,7 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 // Para Create React App:
-export const API_URL = (process as any).env.REACT_APP_API_URL || 'http://localhost:8000';
+export const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000';
 
 export function getAuthHeaders(): Record<string, string> {
   const accessToken = localStorage.getItem('access_token');

@@ -19,7 +19,7 @@ const PrivateRoute: React.FC<PrivateRouteProps> = ({ children, allowedRoles }) =
     return <Navigate to="/" />; // Redirige a la página de inicio o a una página de "No autorizado"
   }
 
-  return children;
+  return <>{children}</>;
 };
 
 export default PrivateRoute;

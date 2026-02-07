@@ -15,14 +15,18 @@ import logging
 from .models import (
     Usuario, Producto, Venta, Visita, Anuncio, Feedback, Envio, Ubicacion, Notificacion,
     CategoriaProducto, Boleta, DetalleVenta, EventoTuristico, Actividad, Promocion,
-    Cupon, FactorCarbono
+    Cupon, FactorCarbono, FCMToken
 )
 from .serializers import (
-    UsuarioSerializer, ProductoSerializer, VentaSerializer, VisitaSerializer, AnuncioSerializer,
+    UsuarioSerializer, ProductoSerializer, ProductoMobileSerializer, VentaSerializer, VisitaSerializer, AnuncioSerializer,
     FeedbackSerializer, EnvioSerializer, UbicacionSerializer, NotificacionSerializer,
     CategoriaProductoSerializer, BoletaSerializer, DetalleVentaSerializer, ActividadSerializer,
     PromocionSerializer, EventoTuristicoSerializer
 )
+from .pagination import MobileCursorPagination
+from .auth import MobileTokenManager
+import jwt
+from django.conf import settings
 from rest_framework.pagination import PageNumberPagination
 from rest_framework import filters
 from drf_yasg.utils import swagger_auto_schema
@@ -64,30 +68,64 @@ def registro(request):
     except Exception as e:
         return Response({'error': f'Error al registrar el usuario: {str(e)}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-@swagger_auto_schema(method='post', operation_description="Login de usuario.")
+@swagger_auto_schema(method='post', operation_description="Login de usuario optimizado para mobile.")
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def login(request):
     username = request.data.get('username')
     password = request.data.get('password')
+    is_mobile = request.query_params.get('mobile') == 'true'
 
     if not username or not password:
         return Response({'error': 'Usuario y contraseña son obligatorios.'}, status=status.HTTP_400_BAD_REQUEST)
 
     usuario = Usuario.objects.filter(username=username).first()
     if usuario and usuario.check_password(password):
-        refresh = RefreshToken.for_user(usuario)
-        return Response({
-            'refresh': str(refresh),
-            'access': str(refresh.access_token),
-            'user': {
-                'id': usuario.id,
-                'username': usuario.username,
-                'rol': usuario.rol
-            }
-        }, status=status.HTTP_200_OK)
+        if is_mobile:
+            tokens = MobileTokenManager.create_tokens(usuario)
+            return Response({
+                **tokens,
+                'user': {
+                    'id': usuario.id,
+                    'username': usuario.username,
+                    'rol': usuario.rol
+                }
+            }, status=status.HTTP_200_OK)
+        else:
+            refresh = RefreshToken.for_user(usuario)
+            return Response({
+                'refresh': str(refresh),
+                'access': str(refresh.access_token),
+                'user': {
+                    'id': usuario.id,
+                    'username': usuario.username,
+                    'rol': usuario.rol
+                }
+            }, status=status.HTTP_200_OK)
 
     return Response({'error': 'Credenciales inválidas.'}, status=status.HTTP_401_UNAUTHORIZED)
+
+@swagger_auto_schema(method='post', operation_description="Logout seguro invalidando el token.")
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def logout_mobile(request):
+    auth_header = request.META.get('HTTP_AUTHORIZATION', '')
+    if not auth_header.startswith('Bearer '):
+        return Response({'error': 'Token no encontrado.'}, status=400)
+        
+    token = auth_header.replace('Bearer ', '')
+    try:
+        # Decodificar para obtener expiración
+        decoded = jwt.decode(token, settings.SECRET_KEY, algorithms=['HS256'])
+        TokenBlacklist.objects.create(
+            token=token,
+            expires_at=datetime.fromtimestamp(decoded['exp'])
+        )
+        return Response({'success': True, 'message': 'Sesión cerrada correctamente.'}, status=200)
+    except Exception as e:
+        logger.error(f"Error en logout_mobile: {str(e)}")
+        # Si falla el decode, igual intentamos cerrarlo pero con un error
+        return Response({'error': 'Token inválido o expirado.'}, status=400)
 
 @swagger_auto_schema(method='post', operation_description="Validar token JWT.")
 @api_view(['POST'])
@@ -212,8 +250,53 @@ def confirmar_compra(request):
 @permission_classes([AllowAny])
 def catalogo_productos(request):
     productos = Producto.objects.filter(cantidad__gt=0)
-    serializer = ProductoSerializer(productos, many=True)
+    
+    # Optimización para Mobile
+    if request.query_params.get('mobile') == 'true':
+        serializer = ProductoMobileSerializer(productos, many=True)
+    else:
+        serializer = ProductoSerializer(productos, many=True)
+        
     return Response(serializer.data, status=status.HTTP_200_OK)
+
+@swagger_auto_schema(method='post', operation_description="Fetch múltiple de productos por ID.")
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def productos_batch(request):
+    """Fetch eficiente de múltiples productos en una sola request"""
+    ids = request.data.get('ids', [])
+    if not ids or not isinstance(ids, list):
+        return Response({'error': 'Se requiere una lista de IDs.'}, status=400)
+    
+    if len(ids) > 100:
+        return Response({'error': 'Máximo 100 IDs permitidos.'}, status=400)
+        
+    productos = Producto.objects.filter(id__in=ids)
+    serializer = ProductoMobileSerializer(productos, many=True)
+    return Response({'results': serializer.data}, status=200)
+
+@swagger_auto_schema(method='post', operation_description="Registro de token FCM para push notifications.")
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def register_fcm_token(request):
+    token = request.data.get('token')
+    device_type = request.data.get('device_type', 'Android')
+    
+    if not token:
+        return Response({'error': 'Token es requerido.'}, status=400)
+        
+    fcm_token, created = FCMToken.objects.get_or_create(
+        usuario=request.user,
+        token=token,
+        defaults={'device_type': device_type}
+    )
+    
+    if not created:
+        fcm_token.device_type = device_type
+        fcm_token.is_active = True
+        fcm_token.save()
+        
+    return Response({'success': True, 'message': 'Token registrado correctamente.'}, status=201)
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
@@ -267,6 +350,17 @@ class ProductoViewSet(viewsets.ModelViewSet):
     search_fields = ['nombre', 'categoria__nombre']
     ordering_fields = ['nombre', 'precio', 'cantidad']
     ordering = ['nombre']
+
+    def get_serializer_class(self):
+        if self.request.query_params.get('mobile') == 'true':
+            return ProductoMobileSerializer
+        return ProductoSerializer
+
+    def get_pagination_class(self):
+        if self.request.query_params.get('mobile') == 'true':
+            return MobileCursorPagination
+        return StandardResultsSetPagination
+
     def get_queryset(self):
         user = self.request.user
         if user.rol == 'productor':

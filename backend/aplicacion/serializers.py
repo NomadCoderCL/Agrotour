@@ -43,6 +43,21 @@ class ProductoSerializer(serializers.ModelSerializer):
         model = Producto
         fields = ['id', 'nombre', 'descripcion', 'precio', 'cantidad', 'categoria', 'productor', 'metodo_venta']
 
+# Serializador para Producto (Versión Móvil Optimizada)
+class ProductoMobileSerializer(serializers.ModelSerializer):
+    """Versión ligera de Producto para reducir consumo de datos en móviles"""
+    class Meta:
+        model = Producto
+        fields = [
+            'id',
+            'nombre',
+            'precio',
+            'metodo_venta',
+            'cantidad',
+            'productor',
+            # Se omiten campos pesados como descripcion si no son necesarios en el listado
+        ]
+
 # Serializador para Categoría de Producto
 class CategoriaProductoSerializer(serializers.ModelSerializer):
     class Meta:

@@ -65,6 +65,7 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'allauth.account.middleware.AccountMiddleware', # Required by allauth
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'aplicacion.middleware.TokenBlacklistMiddleware',
 ]
 
 ROOT_URLCONF = 'agrotour_backend.urls'

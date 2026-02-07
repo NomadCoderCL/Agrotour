@@ -1,0 +1,56 @@
+{
+    "version": "1.0.0",
+    "project": "Agrotour",
+    "phase": "Handover to Mobile (Fase 2)",
+    "endpoints": {
+        "auth": {
+            "login": "POST /api/token/",
+            "refresh": "POST /api/token/refresh/",
+            "google": "POST /api/auth/google/",
+            "facebook": "POST /api/auth/facebook/"
+        },
+        "sync": {
+            "engine_url": "http://localhost:8001/sync/push",
+            "method": "POST",
+            "payload": "SyncOperation[]",
+            "entities_supported": [
+                "Producto",
+                "Venta",
+                "StockEvent"
+            ]
+        },
+        "media": {
+            "upload": "POST /api/upload-image/",
+            "note": "Returns optimized URL. Mandatory image/jpeg format."
+        },
+        "business": {
+            "confirm_purchase": "POST /api/confirmar-compra/",
+            "checkout_payload": {
+                "carrito": [
+                    {
+                        "producto_id": 1,
+                        "cantidad": 2
+                    }
+                ],
+                "codigo_cupon": "string (optional)"
+            },
+            "response_includes": [
+                "monto_total",
+                "huella_carbono",
+                "descuento"
+            ]
+        },
+        "realtime": {
+            "ws_url": "ws://localhost:8000/ws/notifications/",
+            "events": [
+                "STOCK_ALERTA",
+                "VENTA_CONFIRMADA"
+            ]
+        }
+    },
+    "mobile_requirements": {
+        "local_db": "SQLite (via expo-sqlite)",
+        "image_handling": "Compress to <200KB before upload",
+        "sync_strategy": "Queued local operations with retry"
+    }
+}

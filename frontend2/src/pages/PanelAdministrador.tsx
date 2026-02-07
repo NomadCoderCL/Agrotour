@@ -1,144 +1,116 @@
 import React, { useState } from 'react';
-
-const clientes = [
-  { id: 1, nombre: 'Juan Pérez', tipo: 'cliente' },
-  { id: 2, nombre: 'María Rodríguez', tipo: 'productor' },
-  { id: 3, nombre: 'Pedro Gómez', tipo: 'cliente' },
-  { id: 4, nombre: 'Ana García', tipo: 'productor' },
-  { id: 5, nombre: 'Carlos López', tipo: 'cliente' },
-];
+import { useAuth } from '@/contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
+import PanelLayout from '@/components/layouts/PanelLayout';
+import DarkModeToggle from '@/components/ui/DarkModeToggle';
+import ManageUsers from '@/components/AdminPanelOptions/ManageUsers';
+import ManageOrders from '@/components/AdminPanelOptions/ManageOrders';
+import ManageDisputes from '@/components/AdminPanelOptions/ManageDisputes';
+import Analytics from '@/components/AdminPanelOptions/Analytics';
+import AdminSettings from '@/components/AdminPanelOptions/AdminSettings';
 
 const AdminPanel = () => {
-  const [filtro, setFiltro] = useState('todos');
-  const [clientesFiltrados, setClientesFiltrados] = useState(clientes);
-  const [opcion, setOpcion] = useState('listado');
-  const [mostrarMenu, setMostrarMenu] = useState(false);
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
+  const [currentSection, setCurrentSection] = useState('dashboard');
+  const [sidebarOpen, setSidebarOpen] = useState(true);
 
-  const handleFiltroChange = (filtro: string) => {
-    setFiltro(filtro);
-    if (filtro === 'todos') {
-      setClientesFiltrados(clientes);
-    } else {
-      setClientesFiltrados(clientes.filter((cliente) => cliente.tipo === filtro));
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+  };
+
+  const menuItems = [
+    { id: 'dashboard', label: 'Panel Principal', icon: '📊' },
+    { id: 'users', label: 'Gestionar Usuarios', icon: '👥' },
+    { id: 'orders', label: 'Órdenes', icon: '📦' },
+    { id: 'disputes', label: 'Disputas', icon: '⚠️' },
+    { id: 'settings', label: 'Configuración', icon: '⚙️' },
+  ];
+
+  const renderSection = () => {
+    switch (currentSection) {
+      case 'dashboard':
+        return <Analytics />;
+      case 'users':
+        return <ManageUsers />;
+      case 'orders':
+        return <ManageOrders />;
+      case 'disputes':
+        return <ManageDisputes />;
+      case 'settings':
+        return <AdminSettings />;
+      default:
+        return <Analytics />;
     }
   };
 
-  const handleOpcionChange = (opcion: string) => {
-    setOpcion(opcion);
-    setMostrarMenu(false);
-  };
-
   return (
-    <div className="max-w-7xl mx-auto p-4 sm:p-6 md:p-8 bg-green-100 flex">
-      <div className="w-1/5 bg-sky-200 p-4">
-        <button
-          className="bg-sky-500 hover:bg-sky-700 text-white font-bold py-2 px-4 rounded"
-          onClick={() => setMostrarMenu(!mostrarMenu)}
-        >
-          Menú
-        </button>
-        {mostrarMenu && (
-          <ul className="mt-4">
-            <li className="py-2">
-              <button
-                className={`text-brown-500 hover:text-brown-700 font-bold py-2 px-4 rounded ${opcion === 'listado' ? 'bg-sky-400' : ''}`}
-                onClick={() => handleOpcionChange('listado')}
-              >
-                Listado de usuarios
-              </button>
-            </li>
-            <li className="py-2">
-              <button
-                className={`text-brown-500 hover:text-brown-700 font-bold py-2 px-4 rounded ${opcion === 'ajustes' ? 'bg-sky-400' : ''}`}
-                onClick={() => handleOpcionChange('ajustes')}
-              >
-                Ajustes
-              </button>
-            </li>
-            <li className="py-2">
-              <button
-                className={`text-brown-500 hover:text-brown-700 font-bold py-2 px-4 rounded ${opcion === 'informes' ? 'bg-sky-400' : ''}`}
-                onClick={() => handleOpcionChange('informes')}
-              >
-                Generar informes
-              </button>
-            </li>
-            <li className="py-2">
-              <button
-                className={`text-brown-500 hover:text-brown-700 font-bold py-2 px-4 rounded ${opcion === 'cuentas' ? 'bg-sky-400' : ''}`}
-                onClick={() => handleOpcionChange('cuentas')}
-              >
-                Administración de cuentas
-              </button>
-            </li>
-          </ul>
-        )}
-      </div>
-      <div className="w-4/5 p-4">
-        <div className="flex justify-between items-center mb-4">
-          <h1 className="text-3xl font-bold text-brown-500">Panel de Administrador</h1>
+    <div className="flex h-screen bg-gray-100">
+      {/* Sidebar */}
+      <div className={`${sidebarOpen ? 'w-64' : 'w-20'} bg-gray-800 text-white transition-all duration-300 flex flex-col`}>
+        {/* Logo/Header */}
+        <div className="p-6 border-b border-gray-700">
+          {sidebarOpen ? (
+            <h1 className="text-xl font-bold">Agrotour Admin</h1>
+          ) : (
+            <h1 className="text-lg font-bold">AA</h1>
+          )}
+        </div>
+
+        {/* Menu Items */}
+        <nav className="flex-1 p-4 space-y-2">
+          {menuItems.map((item) => (
+            <button
+              key={item.id}
+              onClick={() => setCurrentSection(item.id)}
+              className={`w-full flex items-center gap-4 px-4 py-3 rounded-lg transition ${
+                currentSection === item.id
+                  ? 'bg-blue-600 text-white'
+                  : 'text-gray-300 hover:bg-gray-700'
+              }`}
+              title={item.label}
+            >
+              <span className="text-xl">{item.icon}</span>
+              {sidebarOpen && <span className="text-sm font-medium">{item.label}</span>}
+            </button>
+          ))}
+        </nav>
+
+        {/* Toggle Sidebar */}
+        <div className="p-4 border-t border-gray-700">
           <button
-            className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded"
-            onClick={() => console.log('Cerrar sesión')}
+            onClick={() => setSidebarOpen(!sidebarOpen)}
+            className="w-full text-gray-300 hover:text-white text-sm p-2 rounded"
           >
-            Cerrar sesión
+            {sidebarOpen ? '←' : '→'}
           </button>
         </div>
-        {opcion === 'listado' && (
-          <div className="flex flex-wrap justify-center mb-4">
+      </div>
+
+      {/* Main Content */}
+      <div className="flex-1 flex flex-col">
+        {/* Top Bar */}
+        <div className="bg-white dark:bg-gray-800 border-b border-gray-300 dark:border-gray-700 px-8 py-4 flex justify-between items-center shadow-sm">
+          <div>
+            <h2 className="text-2xl font-bold text-gray-800 dark:text-white">Panel de Administrador</h2>
+            <p className="text-sm text-gray-500 dark:text-gray-400">Bienvenido, {user?.username || 'Administrador'}</p>
+          </div>
+          <div className="flex items-center gap-4">
+            <DarkModeToggle className="text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700" />
             <button
-              className={`text-brown-500 hover:text-brown-700 font-bold py-2 px-4 rounded ${filtro === 'todos' ? 'bg-sky-200' : ''}`}
-              onClick={() => handleFiltroChange('todos')}
+              onClick={handleLogout}
+              className="bg-red-600 hover:bg-red-700 text-white font-medium px-6 py-2 rounded-lg transition"
             >
-              Todos
+              Cerrar Sesión
             </button>
-            <button
-              className={`text-brown-500 hover:text-brown-700 font-bold py-2 px-4 rounded ${filtro === 'cliente' ? 'bg-sky-200' : ''}`}
-              onClick={() => handleFiltroChange('cliente')}
-            >
-              Clientes
-            </button>
-            <button
-              className={`text-brown-500 hover:text-brown-700 font-bold py-2 px-4 rounded ${filtro === 'productor' ? 'bg-sky-200' : ''}`}
-              onClick={() => handleFiltroChange('productor')}
-            >
-              Productores
-            </button>
-            <table className="w-full bg-green-200">
-              <thead>
-                <tr>
-                  <th className="px-4 py-2 text-brown-500">ID</th>
-                  <th className="px-4 py-2 text-brown-500">Nombre</th>
-                  <th className="px-4 py-2 text-brown-500">Tipo</th>
-                </tr>
-              </thead>
-              <tbody>
-                {clientesFiltrados.map((cliente) => (
-                  <tr key={cliente.id}>
-                    <td className="px-4 py-2 text-brown-500">{cliente.id}</td>
-                    <td className="px-4 py-2 text-brown-500">{cliente.nombre}</td>
-                    <td className="px-4 py-2 text-brown-500">{cliente.tipo}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
           </div>
-        )}
-        {opcion === 'ajustes' && (
-          <div className="flex flex-wrap justify-center mb-4">
-            <h2 className="text-2xl font-bold text-brown-500">Ajustes</h2>
-          </div>
-        )}
-        {opcion === 'informes' && (
-          <div className="flex flex-wrap justify-center mb-4">
-            <h2 className="text-2xl font-bold text-brown-500">Generar informes</h2>
-          </div>
-        )}
-        {opcion === 'cuentas' && (
-          <div className="flex flex-wrap justify-center mb-4">
-            <h2 className="text-2xl font-bold text-brown-500">Administración de cuentas</h2>
-          </div>
-        )}
+        </div>
+
+        {/* Content Area */}
+        <div className="flex-1 overflow-auto p-8">
+          {renderSection()}
+        </div>
       </div>
     </div>
   );

@@ -1,0 +1,21 @@
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: agrotour-db
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_DB=agrotour
+      - POSTGRES_USER=agrotour_user
+      - POSTGRES_PASSWORD=agrotour_pass
+    ports:
+      - "5432:5432"
+
+  redis:
+    image: redis:7-alpine
+    container_name: agrotour-redis
+    ports:
+      - "6379:6379"
+
+volumes:
+  postgres_data:

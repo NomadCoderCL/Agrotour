@@ -1,0 +1,829 @@
+[
+{
+  "model": "sessions.session",
+  "pk": "01cv3vbq755ba25pu2pj4fw0hxk45wya",
+  "fields": {
+    "session_data": ".eJxVjDsOwjAQBe_iGllef2KHkp4zWGvvLgkgR8qnQtwdIqWA9s3Me6mM2zrkbeE5j6TOCtTpdytYH9x2QHdst0nXqa3zWPSu6IMu-joRPy-H-3cw4DJ8a0nibUJTIrIRDOCEgw1emIAYfY_RSAUHfYEYiFJxkKizzvXWd-LU-wP9Ezf9:1tMUTy:MfwPqnsvrneHvq1sawB_-yFLS3SukJtZ3GhPRHecMcU",
+    "expire_date": "2024-12-28T15:55:06.036Z"
+  }
+},
+{
+  "model": "sessions.session",
+  "pk": "dqjg1a494ubhmkfo0y6zpobf32x6klza",
+  "fields": {
+    "session_data": ".eJxVjDsOwjAQBe_iGllef2KHkp4zWGvvLgkgR8qnQtwdIqWA9s3Me6mM2zrkbeE5j6TOCtTpdytYH9x2QHdst0nXqa3zWPSu6IMu-joRPy-H-3cw4DJ8a0nibUJTIrIRDOCEgw1emIAYfY_RSAUHfYEYiFJxkKizzvXWd-LU-wP9Ezf9:1tONsT:Jo4paWINm_jKlp8dRauRskoNbJYMHwhd_h-tQma2lUM",
+    "expire_date": "2025-01-02T21:16:13.166Z"
+  }
+},
+{
+  "model": "aplicacion.usuario",
+  "fields": {
+    "password": "pbkdf2_sha256$870000$XYFCvjtg74tp6gJh52eZOh$3vfEq6hPrOBq23ndGcFat08m2FViwLrUnCKcKvvFl9U=",
+    "last_login": "2024-12-19T21:16:13.008Z",
+    "is_superuser": true,
+    "username": "admin",
+    "first_name": "",
+    "last_name": "",
+    "email": "admin@admin.admin",
+    "is_staff": true,
+    "is_active": true,
+    "date_joined": "2024-12-14T13:58:00.586Z",
+    "rol": "cliente",
+    "direccion": null,
+    "telefono": null,
+    "token_social": null,
+    "groups": [],
+    "user_permissions": []
+  }
+},
+{
+  "model": "aplicacion.usuario",
+  "fields": {
+    "password": "pbkdf2_sha256$870000$O66ieWI9QPXBeY6R1U6bTK$6ki9wbujjAIh3aFUJx5XQz39fGhuPf8CDfvDNRjfrIg=",
+    "last_login": null,
+    "is_superuser": false,
+    "username": "cliente",
+    "first_name": "",
+    "last_name": "",
+    "email": "cliente@cliente.cl",
+    "is_staff": false,
+    "is_active": true,
+    "date_joined": "2024-12-14T14:51:59.990Z",
+    "rol": "cliente",
+    "direccion": null,
+    "telefono": null,
+    "token_social": null,
+    "groups": [],
+    "user_permissions": []
+  }
+},
+{
+  "model": "aplicacion.usuario",
+  "fields": {
+    "password": "pbkdf2_sha256$870000$PWDaBXUvEvuin9GvzcfYZv$+7MJiJL3ynbZMlyDPaoSXCZ5fj4X3kBTHbFyaTo98mU=",
+    "last_login": null,
+    "is_superuser": false,
+    "username": "productor",
+    "first_name": "",
+    "last_name": "",
+    "email": "prod@dmaosdi.sad",
+    "is_staff": false,
+    "is_active": true,
+    "date_joined": "2024-12-14T15:22:06.011Z",
+    "rol": "productor",
+    "direccion": null,
+    "telefono": null,
+    "token_social": null,
+    "groups": [],
+    "user_permissions": []
+  }
+},
+{
+  "model": "aplicacion.usuario",
+  "fields": {
+    "password": "pbkdf2_sha256$870000$WRxK5sYH8AtrvlgoX19C12$vKENVsYOByG6lZ7Ywhf3PwTguctj2H0AMSJe3wacRw4=",
+    "last_login": null,
+    "is_superuser": false,
+    "username": "cristian",
+    "first_name": "",
+    "last_name": "",
+    "email": "cristianrcsm94@gmail.com",
+    "is_staff": false,
+    "is_active": true,
+    "date_joined": "2024-12-19T23:04:01.732Z",
+    "rol": "productor",
+    "direccion": null,
+    "telefono": null,
+    "token_social": null,
+    "groups": [],
+    "user_permissions": []
+  }
+},
+{
+  "model": "aplicacion.usuario",
+  "fields": {
+    "password": "pbkdf2_sha256$870000$SjBRGIOg9yGYULnKGMZzRX$ck0+IY15usj2CJReB6ANNOJCLBkKyqB7L4MIls6dgHs=",
+    "last_login": null,
+    "is_superuser": false,
+    "username": "jeanett",
+    "first_name": "",
+    "last_name": "",
+    "email": "jeanett@gmail.com",
+    "is_staff": false,
+    "is_active": true,
+    "date_joined": "2024-12-19T23:15:36.350Z",
+    "rol": "productor",
+    "direccion": null,
+    "telefono": null,
+    "token_social": null,
+    "groups": [],
+    "user_permissions": []
+  }
+},
+{
+  "model": "aplicacion.categoriaproducto",
+  "pk": 1,
+  "fields": {
+    "nombre": "fruta",
+    "descripcion": "fruta",
+    "productor": [
+      "productor"
+    ]
+  }
+},
+{
+  "model": "aplicacion.categoriaproducto",
+  "pk": 2,
+  "fields": {
+    "nombre": "Categoría 1",
+    "descripcion": "Descripción de la categoría 1",
+    "productor": [
+      "productor"
+    ]
+  }
+},
+{
+  "model": "aplicacion.categoriaproducto",
+  "pk": 3,
+  "fields": {
+    "nombre": "Categoría 2",
+    "descripcion": "Descripción de la categoría 2",
+    "productor": [
+      "productor"
+    ]
+  }
+},
+{
+  "model": "aplicacion.categoriaproducto",
+  "pk": 4,
+  "fields": {
+    "nombre": "Categoría 3",
+    "descripcion": "Descripción de la categoría 3",
+    "productor": [
+      "productor"
+    ]
+  }
+},
+{
+  "model": "aplicacion.producto",
+  "pk": 1,
+  "fields": {
+    "nombre": "tomate",
+    "descripcion": "tomate",
+    "precio": "100.00",
+    "cantidad": 32,
+    "categoria": 1,
+    "productor": [
+      "productor"
+    ],
+    "metodo_venta": "unidad"
+  }
+},
+{
+  "model": "aplicacion.producto",
+  "pk": 2,
+  "fields": {
+    "nombre": "Producto 1",
+    "descripcion": "Descripción del producto 1",
+    "precio": "82.99",
+    "cantidad": 3,
+    "categoria": 4,
+    "productor": [
+      "productor"
+    ],
+    "metodo_venta": "unidad"
+  }
+},
+{
+  "model": "aplicacion.producto",
+  "pk": 3,
+  "fields": {
+    "nombre": "Producto 2",
+    "descripcion": "Descripción del producto 2",
+    "precio": "20.99",
+    "cantidad": 47,
+    "categoria": 3,
+    "productor": [
+      "productor"
+    ],
+    "metodo_venta": "unidad"
+  }
+},
+{
+  "model": "aplicacion.producto",
+  "pk": 4,
+  "fields": {
+    "nombre": "Producto 3",
+    "descripcion": "Descripción del producto 3",
+    "precio": "17.99",
+    "cantidad": 13,
+    "categoria": 3,
+    "productor": [
+      "productor"
+    ],
+    "metodo_venta": "unidad"
+  }
+},
+{
+  "model": "aplicacion.producto",
+  "pk": 5,
+  "fields": {
+    "nombre": "Producto 4",
+    "descripcion": "Descripción del producto 4",
+    "precio": "80.99",
+    "cantidad": 2,
+    "categoria": 2,
+    "productor": [
+      "productor"
+    ],
+    "metodo_venta": "kilo"
+  }
+},
+{
+  "model": "aplicacion.producto",
+  "pk": 6,
+  "fields": {
+    "nombre": "Producto 5",
+    "descripcion": "Descripción del producto 5",
+    "precio": "41.99",
+    "cantidad": 35,
+    "categoria": 2,
+    "productor": [
+      "productor"
+    ],
+    "metodo_venta": "kilo"
+  }
+},
+{
+  "model": "aplicacion.producto",
+  "pk": 7,
+  "fields": {
+    "nombre": "Producto 6",
+    "descripcion": "Descripción del producto 6",
+    "precio": "22.99",
+    "cantidad": 24,
+    "categoria": 4,
+    "productor": [
+      "productor"
+    ],
+    "metodo_venta": "kilo"
+  }
+},
+{
+  "model": "aplicacion.producto",
+  "pk": 8,
+  "fields": {
+    "nombre": "Producto 7",
+    "descripcion": "Descripción del producto 7",
+    "precio": "39.99",
+    "cantidad": 26,
+    "categoria": 4,
+    "productor": [
+      "productor"
+    ],
+    "metodo_venta": "unidad"
+  }
+},
+{
+  "model": "aplicacion.venta",
+  "pk": 1,
+  "fields": {
+    "cliente": [
+      "cliente"
+    ],
+    "productor": [
+      "productor"
+    ],
+    "fecha_venta": "2024-12-14T16:36:39.316Z",
+    "monto_total": "105.99"
+  }
+},
+{
+  "model": "aplicacion.venta",
+  "pk": 2,
+  "fields": {
+    "cliente": [
+      "cliente"
+    ],
+    "productor": [
+      "productor"
+    ],
+    "fecha_venta": "2024-12-14T16:36:39.460Z",
+    "monto_total": "179.99"
+  }
+},
+{
+  "model": "aplicacion.venta",
+  "pk": 3,
+  "fields": {
+    "cliente": [
+      "cliente"
+    ],
+    "productor": [
+      "productor"
+    ],
+    "fecha_venta": "2024-12-14T16:36:39.601Z",
+    "monto_total": "302.99"
+  }
+},
+{
+  "model": "aplicacion.venta",
+  "pk": 4,
+  "fields": {
+    "cliente": [
+      "cliente"
+    ],
+    "productor": [
+      "productor"
+    ],
+    "fecha_venta": "2024-12-14T16:36:39.802Z",
+    "monto_total": "407.99"
+  }
+},
+{
+  "model": "aplicacion.venta",
+  "pk": 5,
+  "fields": {
+    "cliente": [
+      "cliente"
+    ],
+    "productor": [
+      "productor"
+    ],
+    "fecha_venta": "2024-12-14T16:36:39.943Z",
+    "monto_total": "155.99"
+  }
+},
+{
+  "model": "aplicacion.venta",
+  "pk": 6,
+  "fields": {
+    "cliente": [
+      "cliente"
+    ],
+    "productor": [
+      "productor"
+    ],
+    "fecha_venta": "2024-12-14T16:36:40.085Z",
+    "monto_total": "405.99"
+  }
+},
+{
+  "model": "aplicacion.venta",
+  "pk": 7,
+  "fields": {
+    "cliente": [
+      "cliente"
+    ],
+    "productor": [
+      "productor"
+    ],
+    "fecha_venta": "2024-12-14T16:36:40.237Z",
+    "monto_total": "488.99"
+  }
+},
+{
+  "model": "aplicacion.venta",
+  "pk": 8,
+  "fields": {
+    "cliente": [
+      "cliente"
+    ],
+    "productor": [
+      "productor"
+    ],
+    "fecha_venta": "2024-12-14T16:36:40.443Z",
+    "monto_total": "271.99"
+  }
+},
+{
+  "model": "aplicacion.venta",
+  "pk": 9,
+  "fields": {
+    "cliente": [
+      "cliente"
+    ],
+    "productor": [
+      "productor"
+    ],
+    "fecha_venta": "2024-12-19T21:25:49.205Z",
+    "monto_total": "1241.95"
+  }
+},
+{
+  "model": "aplicacion.venta",
+  "pk": 10,
+  "fields": {
+    "cliente": [
+      "cliente"
+    ],
+    "productor": [
+      "productor"
+    ],
+    "fecha_venta": "2024-12-19T21:26:03.045Z",
+    "monto_total": "200.00"
+  }
+},
+{
+  "model": "aplicacion.venta",
+  "pk": 11,
+  "fields": {
+    "cliente": [
+      "cliente"
+    ],
+    "productor": [
+      "productor"
+    ],
+    "fecha_venta": "2024-12-19T21:31:48.963Z",
+    "monto_total": "200.00"
+  }
+},
+{
+  "model": "aplicacion.venta",
+  "pk": 12,
+  "fields": {
+    "cliente": [
+      "cliente"
+    ],
+    "productor": [
+      "productor"
+    ],
+    "fecha_venta": "2024-12-19T21:34:40.644Z",
+    "monto_total": "200.00"
+  }
+},
+{
+  "model": "aplicacion.venta",
+  "pk": 13,
+  "fields": {
+    "cliente": [
+      "cliente"
+    ],
+    "productor": [
+      "productor"
+    ],
+    "fecha_venta": "2024-12-19T21:34:42.272Z",
+    "monto_total": "200.00"
+  }
+},
+{
+  "model": "aplicacion.detalleventa",
+  "pk": 1,
+  "fields": {
+    "venta": 9,
+    "producto": 1,
+    "cantidad": 10,
+    "subtotal": "1000.00"
+  }
+},
+{
+  "model": "aplicacion.detalleventa",
+  "pk": 3,
+  "fields": {
+    "venta": 9,
+    "producto": 4,
+    "cantidad": 1,
+    "subtotal": "17.99"
+  }
+},
+{
+  "model": "aplicacion.detalleventa",
+  "pk": 4,
+  "fields": {
+    "venta": 9,
+    "producto": 6,
+    "cantidad": 2,
+    "subtotal": "83.98"
+  }
+},
+{
+  "model": "aplicacion.detalleventa",
+  "pk": 5,
+  "fields": {
+    "venta": 10,
+    "producto": 1,
+    "cantidad": 2,
+    "subtotal": "200.00"
+  }
+},
+{
+  "model": "aplicacion.detalleventa",
+  "pk": 6,
+  "fields": {
+    "venta": 11,
+    "producto": 1,
+    "cantidad": 2,
+    "subtotal": "200.00"
+  }
+},
+{
+  "model": "aplicacion.detalleventa",
+  "pk": 7,
+  "fields": {
+    "venta": 12,
+    "producto": 1,
+    "cantidad": 2,
+    "subtotal": "200.00"
+  }
+},
+{
+  "model": "aplicacion.detalleventa",
+  "pk": 8,
+  "fields": {
+    "venta": 13,
+    "producto": 1,
+    "cantidad": 2,
+    "subtotal": "200.00"
+  }
+},
+{
+  "model": "aplicacion.boleta",
+  "pk": 1,
+  "fields": {
+    "numero_boleta": "BOLETA-1",
+    "fecha_emision": "2024-12-14T16:51:46.361Z",
+    "monto_total": "105.99",
+    "impuestos": "19.00"
+  }
+},
+{
+  "model": "aplicacion.feedback",
+  "pk": 1,
+  "fields": {
+    "cliente": [
+      "cliente"
+    ],
+    "productor": [
+      "productor"
+    ],
+    "comentario": "Comentario 1 del cliente",
+    "calificacion": 1,
+    "fecha_creacion": "2024-12-14T16:36:40.603Z"
+  }
+},
+{
+  "model": "aplicacion.feedback",
+  "pk": 2,
+  "fields": {
+    "cliente": [
+      "cliente"
+    ],
+    "productor": [
+      "productor"
+    ],
+    "comentario": "Comentario 2 del cliente",
+    "calificacion": 4,
+    "fecha_creacion": "2024-12-14T16:36:40.769Z"
+  }
+},
+{
+  "model": "aplicacion.feedback",
+  "pk": 3,
+  "fields": {
+    "cliente": [
+      "cliente"
+    ],
+    "productor": [
+      "productor"
+    ],
+    "comentario": "Comentario 3 del cliente",
+    "calificacion": 5,
+    "fecha_creacion": "2024-12-14T16:36:40.969Z"
+  }
+},
+{
+  "model": "aplicacion.feedback",
+  "pk": 4,
+  "fields": {
+    "cliente": [
+      "cliente"
+    ],
+    "productor": [
+      "productor"
+    ],
+    "comentario": "Comentario 4 del cliente",
+    "calificacion": 2,
+    "fecha_creacion": "2024-12-14T16:36:41.129Z"
+  }
+},
+{
+  "model": "aplicacion.feedback",
+  "pk": 5,
+  "fields": {
+    "cliente": [
+      "cliente"
+    ],
+    "productor": [
+      "productor"
+    ],
+    "comentario": "Comentario 5 del cliente",
+    "calificacion": 4,
+    "fecha_creacion": "2024-12-14T16:36:41.260Z"
+  }
+},
+{
+  "model": "aplicacion.feedback",
+  "pk": 6,
+  "fields": {
+    "cliente": [
+      "cliente"
+    ],
+    "productor": [
+      "productor"
+    ],
+    "comentario": "Comentario 6 del cliente",
+    "calificacion": 1,
+    "fecha_creacion": "2024-12-14T16:36:41.402Z"
+  }
+},
+{
+  "model": "aplicacion.feedback",
+  "pk": 7,
+  "fields": {
+    "cliente": [
+      "cliente"
+    ],
+    "productor": [
+      "productor"
+    ],
+    "comentario": "Comentario 7 del cliente",
+    "calificacion": 3,
+    "fecha_creacion": "2024-12-14T16:36:41.535Z"
+  }
+},
+{
+  "model": "aplicacion.feedback",
+  "pk": 8,
+  "fields": {
+    "cliente": [
+      "cliente"
+    ],
+    "productor": [
+      "productor"
+    ],
+    "comentario": "Comentario 8 del cliente",
+    "calificacion": 5,
+    "fecha_creacion": "2024-12-14T16:36:41.735Z"
+  }
+},
+{
+  "model": "aplicacion.visita",
+  "pk": 1,
+  "fields": {
+    "productor": [
+      "productor"
+    ],
+    "cliente": [
+      "cliente"
+    ],
+    "fecha_visita": "2025-01-04T16:36:41.946Z",
+    "estado": "pendiente"
+  }
+},
+{
+  "model": "aplicacion.visita",
+  "pk": 2,
+  "fields": {
+    "productor": [
+      "productor"
+    ],
+    "cliente": [
+      "cliente"
+    ],
+    "fecha_visita": "2024-12-15T16:36:42.166Z",
+    "estado": "pendiente"
+  }
+},
+{
+  "model": "aplicacion.visita",
+  "pk": 3,
+  "fields": {
+    "productor": [
+      "productor"
+    ],
+    "cliente": [
+      "cliente"
+    ],
+    "fecha_visita": "2024-12-29T16:36:42.302Z",
+    "estado": "cancelada"
+  }
+},
+{
+  "model": "aplicacion.visita",
+  "pk": 4,
+  "fields": {
+    "productor": [
+      "productor"
+    ],
+    "cliente": [
+      "cliente"
+    ],
+    "fecha_visita": "2024-12-21T16:36:42.443Z",
+    "estado": "confirmada"
+  }
+},
+{
+  "model": "aplicacion.visita",
+  "pk": 5,
+  "fields": {
+    "productor": [
+      "productor"
+    ],
+    "cliente": [
+      "cliente"
+    ],
+    "fecha_visita": "2024-12-27T16:36:42.593Z",
+    "estado": "pendiente"
+  }
+},
+{
+  "model": "aplicacion.visita",
+  "pk": 6,
+  "fields": {
+    "productor": [
+      "productor"
+    ],
+    "cliente": [
+      "cliente"
+    ],
+    "fecha_visita": "2025-01-13T16:36:42.796Z",
+    "estado": "cancelada"
+  }
+},
+{
+  "model": "aplicacion.visita",
+  "pk": 7,
+  "fields": {
+    "productor": [
+      "productor"
+    ],
+    "cliente": [
+      "cliente"
+    ],
+    "fecha_visita": "2025-01-11T16:36:42.935Z",
+    "estado": "confirmada"
+  }
+},
+{
+  "model": "aplicacion.visita",
+  "pk": 8,
+  "fields": {
+    "productor": [
+      "productor"
+    ],
+    "cliente": [
+      "cliente"
+    ],
+    "fecha_visita": "2024-12-29T16:36:43.136Z",
+    "estado": "cancelada"
+  }
+},
+{
+  "model": "aplicacion.ubicacion",
+  "pk": 1,
+  "fields": {
+    "productor": [
+      "productor"
+    ],
+    "latitud": -33.4489,
+    "longitud": -70.6693,
+    "direccion": "Av. Libertador Bernardo O'Higgins, Santiago"
+  }
+},
+{
+  "model": "admin.logentry",
+  "pk": 1,
+  "fields": {
+    "action_time": "2024-12-14T15:55:27.130Z",
+    "user": [
+      "admin"
+    ],
+    "content_type": [
+      "aplicacion",
+      "categoriaproducto"
+    ],
+    "object_id": "1",
+    "object_repr": "fruta",
+    "action_flag": 1,
+    "change_message": "[{\"added\": {}}]"
+  }
+},
+{
+  "model": "admin.logentry",
+  "pk": 2,
+  "fields": {
+    "action_time": "2024-12-14T15:56:22.778Z",
+    "user": [
+      "admin"
+    ],
+    "content_type": [
+      "aplicacion",
+      "producto"
+    ],
+    "object_id": "1",
+    "object_repr": "tomate",
+    "action_flag": 1,
+    "change_message": "[{\"added\": {}}]"
+  }
+}
+]

@@ -37,6 +37,9 @@ from .views import (
     health_check_ready,
     obtener_boleta,
     descargar_boleta_pdf,
+    productos_batch,
+    register_fcm_token,
+    logout_mobile,
 )
 from .views_images import ImageUploadView
 from .views_auth import GoogleLogin, FacebookLogin
@@ -103,6 +106,9 @@ urlpatterns = [
     path('estadisticas/descargar-pdf/', descargar_estadisticas_pdf, name='descargar_estadisticas_pdf'),
     path('api/ubicaciones-productores/', ubicaciones_productores, name='ubicaciones_productores'),
     path('auth/userinfo/', user_info, name='userinfo'),
+    path('auth/fcm-token/', register_fcm_token, name='register_fcm_token'),
+    path('auth/logout-mobile/', logout_mobile, name='logout_mobile'),
+    path('api/productos/batch/', productos_batch, name='productos_batch'),
 
     path('api/', include(router.urls)),
     

@@ -248,3 +248,33 @@ class FactorCarbono(models.Model):
     def __str__(self):
         return f"{self.categoria}: {self.co2_por_unidad} CO2/{self.unidad}"
 
+# Modelo para Tokens de Firebase (Push Notifications)
+class FCMToken(models.Model):
+    usuario = models.ForeignKey(Usuario, on_delete=models.CASCADE, related_name='fcm_tokens')
+    token = models.CharField(max_length=500, unique=True)
+    device_type = models.CharField(
+        max_length=10,
+        choices=[('iOS', 'iOS'), ('Android', 'Android')],
+        default='Android'
+    )
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    last_used = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "FCM Token"
+        verbose_name_plural = "FCM Tokens"
+        unique_together = ('usuario', 'token')
+
+    def __str__(self):
+        return f"Token de {self.usuario.username} ({self.device_type})"
+
+# Modelo para Blacklist de Tokens (Logout Seguro)
+class TokenBlacklist(models.Model):
+    token = models.TextField(unique=True)
+    blacklisted_at = models.DateTimeField(auto_now_add=True)
+    expires_at = models.DateTimeField()  # Fecha en que expira el token original
+
+    def __str__(self):
+        return f"Blacklist {self.token[:20]}..."
+
