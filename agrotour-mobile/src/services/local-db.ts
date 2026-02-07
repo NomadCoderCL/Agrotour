@@ -73,6 +73,21 @@ export const localDb = {
         const data = await AsyncStorage.getItem(KEYS.CACHE_PRODUCTOS);
         return data ? JSON.parse(data) : [];
     },
+
+    /**
+     * ==================
+     * GENERIC ACCESS
+     * ==================
+     */
+
+    async saveData(key: string, data: any): Promise<void> {
+        await AsyncStorage.setItem(`@agrotour/custom/${key}`, JSON.stringify(data));
+    },
+
+    async getData<T>(key: string): Promise<T | null> {
+        const data = await AsyncStorage.getItem(`@agrotour/custom/${key}`);
+        return data ? JSON.parse(data) : null;
+    },
 };
 
 export default localDb;

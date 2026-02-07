@@ -126,6 +126,13 @@ export interface Visita {
 export type OperationType = "CREATE" | "UPDATE" | "DELETE";
 export type EntityType = "Producto" | "Venta" | "Stock" | "Visita" | "Ubicacion";
 
+export interface SyncState {
+    last_sync_ts: number;
+    last_pull_ts: string;
+    is_syncing: boolean;
+    pending_ops: number;
+}
+
 export interface SyncOperation {
     operation_id: string; // UUID
     operation_type: OperationType;

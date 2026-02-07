@@ -236,6 +236,28 @@ class ApiClient {
                 .then((res) => res.data)
         );
     }
+
+    /**
+     * ==================
+     * GENERIC HTTP METHODS
+     * ==================
+     */
+
+    async get<T>(url: string, config?: any) {
+        return this.retryWithBackoff(() => this.axiosInstance.get<T>(url, config));
+    }
+
+    async post<T>(url: string, data?: any, config?: any) {
+        return this.retryWithBackoff(() => this.axiosInstance.post<T>(url, data, config));
+    }
+
+    async put<T>(url: string, data?: any, config?: any) {
+        return this.retryWithBackoff(() => this.axiosInstance.put<T>(url, data, config));
+    }
+
+    async delete<T>(url: string, config?: any) {
+        return this.retryWithBackoff(() => this.axiosInstance.delete<T>(url, config));
+    }
 }
 
 export const apiClient = new ApiClient();
