@@ -37,7 +37,7 @@ class UsuarioSerializer(serializers.ModelSerializer):
 
 # Serializador para Producto
 class ProductoSerializer(serializers.ModelSerializer):
-    precio = serializers.DecimalField(max_digits=10, decimal_places=2, coerce_to_string=False)
+    precio = serializers.DecimalField(max_digits=10, decimal_places=2, coerce_to_string=True)
 
     class Meta:
         model = Producto
@@ -46,6 +46,8 @@ class ProductoSerializer(serializers.ModelSerializer):
 # Serializador para Producto (Versión Móvil Optimizada)
 class ProductoMobileSerializer(serializers.ModelSerializer):
     """Versión ligera de Producto para reducir consumo de datos en móviles"""
+    precio = serializers.DecimalField(max_digits=10, decimal_places=2, coerce_to_string=True)
+    
     class Meta:
         model = Producto
         fields = [
@@ -72,6 +74,9 @@ class DetalleVentaSerializer(serializers.ModelSerializer):
 
 # Serializador para Boleta
 class BoletaSerializer(serializers.ModelSerializer):
+    monto_total = serializers.DecimalField(max_digits=10, decimal_places=2, coerce_to_string=True)
+    impuestos = serializers.DecimalField(max_digits=10, decimal_places=2, coerce_to_string=True)
+
     class Meta:
         model = Boleta
         fields = ['id', 'numero_boleta', 'fecha_emision', 'monto_total', 'impuestos']
@@ -80,6 +85,7 @@ class BoletaSerializer(serializers.ModelSerializer):
 class VentaSerializer(serializers.ModelSerializer):
     detalles = DetalleVentaSerializer(many=True, read_only=True)
     boleta = BoletaSerializer(read_only=True)
+    monto_total = serializers.DecimalField(max_digits=10, decimal_places=2, coerce_to_string=True)
 
     class Meta:
         model = Venta
@@ -129,6 +135,8 @@ class PromocionSerializer(serializers.ModelSerializer):
 
 # Serializador para Evento Turístico
 class EventoTuristicoSerializer(serializers.ModelSerializer):
+    precio_entrada = serializers.DecimalField(max_digits=10, decimal_places=2, coerce_to_string=True)
+
     class Meta:
         model = EventoTuristico
         fields = ['id', 'productor', 'titulo', 'descripcion', 'fecha_evento', 'precio_entrada']

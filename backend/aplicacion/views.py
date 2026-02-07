@@ -81,6 +81,17 @@ def login(request):
 
     usuario = Usuario.objects.filter(username=username).first()
     if usuario and usuario.check_password(password):
+        # Opcional: Registrar token FCM si viene en el payload
+        fcm_token = request.data.get('fcm_token')
+        device_type = request.data.get('device_type', 'Android')
+        if fcm_token:
+            from .models import FCMToken
+            FCMToken.objects.update_or_create(
+                usuario=usuario,
+                token=fcm_token,
+                defaults={'device_type': device_type, 'is_active': True}
+            )
+
         if is_mobile:
             tokens = MobileTokenManager.create_tokens(usuario)
             return Response({

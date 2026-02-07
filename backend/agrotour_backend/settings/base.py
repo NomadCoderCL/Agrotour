@@ -148,6 +148,7 @@ REST_FRAMEWORK = {
         'rest_framework_simplejwt.authentication.JWTAuthentication',
         'dj_rest_auth.jwt_auth.JWTCookieAuthentication',
     ],
+    'COERCE_DECIMAL_TO_STRING': True,
 }
 
 # Authentication Backends

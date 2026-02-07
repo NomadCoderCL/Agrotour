@@ -1,6 +1,6 @@
 /**
  * API Client for Mobile
- * Gestiona HTTP requests, JWT refresh, retry logic
+ * Gestiona HTTP requests, JWT refresh, retry logic, global error handling
  */
 
 import axios, {
@@ -12,6 +12,7 @@ import axios, {
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { API_BASE_URL, STORAGE_KEYS, REQUEST_TIMEOUT, TOKEN_REFRESH_BUFFER } from './config';
 import { APIException, APIError } from './types';
+import { globalErrorStore } from '../services/GlobalErrorStore';
 
 class APIClient {
   private client: AxiosInstance;
@@ -43,6 +44,22 @@ class APIClient {
       async (error) => {
         const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
 
+        // Global error handling para 400 y 500
+        if (error.response?.status === 400) {
+          globalErrorStore.setError(
+            'CONTRACT_MISMATCH',
+            'Por favor actualiza la aplicación',
+            { endpoint: originalRequest?.url, status: 400 }
+          );
+        } else if (error.response?.status === 500) {
+          globalErrorStore.setError(
+            'SERVER_ERROR',
+            'Error en el servidor. Intentando de nuevo...',
+            { endpoint: originalRequest?.url, status: 500 }
+          );
+        }
+
+        // JWT refresh logic para 401
         if (error.response?.status === 401 && !originalRequest._retry) {
           originalRequest._retry = true;
 
