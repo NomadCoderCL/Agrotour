@@ -1,23 +1,38 @@
 # Django Core
 Django==5.2.1
 djangorestframework==3.16.0
+django-environ==0.12.0
 
 # Authentication
-djangorestframework-simplejwt
-
-# CORS Support
-django-cors-headers
+djangorestframework-simplejwt==5.5.0
+django-allauth==0.61.1
+dj-rest-auth==6.0.0
+django-cors-headers==4.7.0
 
 # API Documentation
 drf-yasg==1.21.10
 
-# PDF Generation
-reportlab
+# Real-time & WebSocket
+daphne==4.1.2
+channels==4.2.0
+channels-redis==4.2.1
 
-# Data Visualization
-matplotlib
+# Background Tasks & Redis
+celery==5.4.0
+redis==5.2.1
+django-celery-results==2.5.1
+django-celery-beat==2.7.0
 
-# Other dependencies
+# Push Notifications
+firebase-admin==6.6.0
+
+# Performance & Security
+django-ratelimit==4.1.0
+gunicorn==23.0.0
+
+# Utility & Data
+reportlab==4.3.1
+matplotlib==3.10.0
 asgiref==3.8.1
 inflection==0.5.1
 packaging==25.0
@@ -26,3 +41,4 @@ PyYAML==6.0.2
 sqlparse==0.5.3
 tzdata==2025.2
 uritemplate==4.1.1
+psycopg2-binary==2.9.10

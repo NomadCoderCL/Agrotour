@@ -3,7 +3,14 @@
  * Variables de entorno, API URLs, constants
  */
 
-export const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:8000/api';
+// Environment-specific URLs
+export const API_URLS = {
+  LOCAL: 'http://localhost:8000/api',
+  STAGING: process.env.EXPO_PUBLIC_STAGING_URL || 'http://staging.agrotour.local/api/v1',
+  PRODUCTION: process.env.EXPO_PUBLIC_PRODUCTION_URL || 'https://api.agrotour.com/api/v1',
+} as const;
+
+export const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || API_URLS.LOCAL;
 export const SYNC_INTERVAL = 30000; // 30 segundos
 export const RETRY_MAX_ATTEMPTS = 4;
 export const RETRY_INITIAL_DELAY = 1000; // 1 segundo
@@ -14,6 +21,7 @@ export const TOKEN_REFRESH_BUFFER = 18000;
 // Timeouts
 export const REQUEST_TIMEOUT = 30000; // 30 segundos
 export const SYNC_TIMEOUT = 60000; // 1 minuto
+export const STRESS_TEST_DELAY = parseInt(process.env.EXPO_PUBLIC_STRESS_TEST_DELAY || '0'); // For testing latency
 
 // Storage keys
 export const STORAGE_KEYS = {

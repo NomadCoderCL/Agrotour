@@ -28,7 +28,7 @@ class MobileAPITestCase(TestCase):
         )
 
     def test_optimized_mobile_payload(self):
-        """Verifica que el catálogo mobile devuelve menos campos"""
+        """Verifica que el catálogo mobile devuelve menos campos y Decimals como Strings"""
         url = reverse('catalogo_productos') + "?mobile=true"
         response = self.client.get(url)
         
@@ -36,7 +36,9 @@ class MobileAPITestCase(TestCase):
         # Debería tener los campos esenciales
         self.assertIn('nombre', response.data[0])
         self.assertIn('precio', response.data[0])
-        # NO debería tener descripción larga si se optimizó (según mi ProductoMobileSerializer)
+        # VERIFICACIÓN CRÍTICA: El precio debe ser un STRING para evitar errores en JS
+        self.assertIsInstance(response.data[0]['precio'], str)
+        # NO debería tener descripción larga
         self.assertNotIn('descripcion', response.data[0])
 
     def test_productos_batch_endpoint(self):
@@ -57,11 +59,26 @@ class MobileAPITestCase(TestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertTrue(FCMToken.objects.filter(token='fcm_test_token_123').exists())
 
-    def test_mobile_login_metadata(self):
-        """Verifica que el login con ?mobile=true devuelve metadata de refresh"""
+    def test_mobile_login_with_fcm(self):
+        """Verifica que el login con ?mobile=true devuelve metadata y registra FCM token"""
         url = reverse('login') + "?mobile=true"
-        response = self.client.post(url, {'username': 'testmobile', 'password': 'password123'}, format='json')
+        data = {
+            'username': 'testmobile',
+            'password': 'password123',
+            'fcm_token': 'login_fcm_token_456',
+            'device_type': 'iOS'
+        }
+        response = self.client.post(url, data, format='json')
         
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+        # Debería tener los campos esenciales obtenidos de MobileTokenManager
         self.assertIn('expires_in', response.data)
         self.assertIn('should_refresh_in', response.data)
+        # Verificar que el token se guardó en la DB
+        self.assertTrue(FCMToken.objects.filter(token='login_fcm_token_456', device_type='iOS').exists())
+
+    def test_api_v1_routing(self):
+        """Verifica que las rutas v1 son accesibles"""
+        v1_url = '/api/v1/api/catalogo/?mobile=true'
+        response = self.client.get(v1_url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
