@@ -6,6 +6,7 @@ import "react-native-reanimated";
 import { initializeSqliteDB } from "@/services/SqliteDB";
 import { AuthProvider } from "@/contexts/AuthContextV2";
 import { CartProvider } from "@/contexts/CartContextV2";
+import { SyncProvider } from "@/contexts/SyncContext";
 import { DarkModeProvider } from "@/contexts/DarkModeContext";
 import { PushNotificationProvider } from "@/contexts/PushNotificationContext";
 import { GlobalErrorBoundary } from "@/components/GlobalErrorBoundary";
@@ -38,10 +39,12 @@ export default function RootLayout() {
     <DarkModeProvider>
       <AuthProvider>
         <CartProvider>
-          <PushNotificationProvider>
-            <RootLayoutContent />
-            <StatusBar style="auto" />
-          </PushNotificationProvider>
+          <SyncProvider>
+            <PushNotificationProvider>
+              <RootLayoutContent />
+              <StatusBar style="auto" />
+            </PushNotificationProvider>
+          </SyncProvider>
         </CartProvider>
       </AuthProvider>
     </DarkModeProvider>

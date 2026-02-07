@@ -4,8 +4,9 @@ import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 
 import { useDarkMode } from '@/contexts/DarkModeContext';
-import { useCart } from '@/contexts/CartContext';
-import { Button } from '@/components/UI';
+import { useCart } from '@/contexts/CartContextV2';
+import { useSync } from '@/contexts/SyncContext';
+import { globalErrorStore } from '@/services/GlobalErrorStore';
 import { CartItem } from '@/shared/types';
 
 export default function CarritoScreen() {

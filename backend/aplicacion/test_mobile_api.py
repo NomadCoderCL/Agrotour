@@ -1,10 +1,11 @@
-from django.test import TestCase
+from django.test import TestCase, override_settings
 from django.urls import reverse
 from rest_framework.test import APIClient
 from rest_framework import status
 from aplicacion.models import Usuario, Producto, CategoriaProducto, FactorCarbono, FCMToken
 from decimal import Decimal
 
+@override_settings(CELERY_TASK_ALWAYS_EAGER=True)
 class MobileAPITestCase(TestCase):
     def setUp(self):
         self.client = APIClient()

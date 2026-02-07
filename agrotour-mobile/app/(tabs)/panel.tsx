@@ -3,8 +3,8 @@ import { useState } from 'react';
 import { Ionicons } from '@expo/vector-icons';
 
 import { useDarkMode } from '@/contexts/DarkModeContext';
-import { useAuth } from '@/contexts/AuthContext';
-import { Button } from '@/components/UI';
+import { useAuth } from '@/contexts/AuthContextV2';
+import { globalErrorStore } from '@/services/GlobalErrorStore';
 
 export default function PanelScreen() {
   const { colors } = useDarkMode();

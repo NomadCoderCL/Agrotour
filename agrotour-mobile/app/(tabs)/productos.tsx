@@ -3,12 +3,11 @@ import { useEffect, useState } from 'react';
 import { Ionicons } from '@expo/vector-icons';
 
 import { useDarkMode } from '@/contexts/DarkModeContext';
-import { useAuth } from '@/contexts/AuthContext';
-import { useCart } from '@/contexts/CartContext';
-import { api, withRetry } from '@/shared/api';
-import { ENDPOINTS } from '@/shared/config';
-import { Producto } from '@/shared/types';
-import { LoadingSpinner, ErrorMessage, Button, Input } from '@/components/UI';
+import { useAuth } from '@/contexts/AuthContextV2';
+import { useCart } from '@/contexts/CartContextV2';
+import { dataService } from '@/services/DataService';
+import { LoadingSpinner } from '@/components/LoadingSpinner';
+import { globalErrorStore } from '@/services/GlobalErrorStore';
 
 export default function ProductosScreen() {
   const { colors } = useDarkMode();
@@ -34,10 +33,10 @@ export default function ProductosScreen() {
     try {
       setIsLoading(true);
       setError(null);
-      const data = await withRetry<Producto[]>(() => api.get(ENDPOINTS.PRODUCTS.LIST + '?limit=50'));
-      setProductos(data ?? []);
+      const products = await dataService.getProducts();
+      setProductos(products);
     } catch (err) {
-      setError('No se pudieron cargar los productos');
+      globalErrorStore.setError('NETWORK_ERROR', 'No se pudieron cargar los productos');
       console.error(err);
     } finally {
       setIsLoading(false);

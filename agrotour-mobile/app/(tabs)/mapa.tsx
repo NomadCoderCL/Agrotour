@@ -3,9 +3,9 @@ import { useEffect, useState } from 'react';
 import { Ionicons } from '@expo/vector-icons';
 
 import { useDarkMode } from '@/contexts/DarkModeContext';
-import { useAuth } from '@/contexts/AuthContext';
-import { api, withRetry } from '@/shared/api';
-import { ENDPOINTS } from '@/shared/config';
+import { useAuth } from '@/contexts/AuthContextV2';
+import { dataService } from '@/services/DataService';
+import { globalErrorStore } from '@/services/GlobalErrorStore';
 import { Ubicacion, Productor } from '@/shared/types';
 import { LoadingSpinner, ErrorMessage, Button } from '@/components/UI';
 
@@ -26,10 +26,10 @@ export default function MapaScreen() {
     try {
       setIsLoading(true);
       setError(null);
-      const data = await withRetry<Productor[]>(() => api.get(ENDPOINTS.PRODUCERS.LIST));
-      setProductores(data ?? []);
+      const producers = await dataService.getProducers();
+      setProductores(producers);
     } catch (err) {
-      setError('No se pudieron cargar los productores');
+      globalErrorStore.setError('NETWORK_ERROR', 'No se pudieron cargar los productores');
       console.error(err);
     } finally {
       setIsLoading(false);
