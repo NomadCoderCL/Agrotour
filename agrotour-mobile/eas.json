@@ -1,0 +1,55 @@
+{
+  "cli": {
+    "version": ">= 5.0.0",
+    "promptToConfigurePushNotifications": false
+  },
+  "build": {
+    "production": {
+      "node": "18.13.0",
+      "ios": {
+        "resourceClass": "large"
+      },
+      "android": {
+        "resourceClass": "large"
+      }
+    },
+    "preview": {
+      "node": "18.13.0",
+      "ios": {
+        "resourceClass": "medium"
+      },
+      "android": {
+        "resourceClass": "medium"
+      }
+    },
+    "development": {
+      "node": "18.13.0",
+      "developmentClient": true,
+      "distribution": "internal",
+      "ios": {
+        "resourceClass": "medium"
+      },
+      "android": {
+        "resourceClass": "medium"
+      }
+    }
+  },
+  "submit": {
+    "production": {
+      "ios": {
+        "ascAppId": "6739546218",
+        "appleId": "dev@agrotour.cl",
+        "appleTeamId": "ABC123XYZ",
+        "bundleIdentifier": "cl.agrotour.app"
+      },
+      "android": {
+        "serviceAccountKeyPath": "./eas-service-account.json",
+        "track": "production",
+        "releaseStatus": "completed"
+      }
+    }
+  },
+  "credentials": {
+    "manager": "github"
+  }
+}
