@@ -53,6 +53,7 @@ export const ENDPOINTS = {
   },
   FCM: {
     REGISTER_TOKEN: '/auth/fcm-token/',
+    UNREGISTER_TOKEN: '/auth/fcm-token/unregister/',
   },
 } as const;
 

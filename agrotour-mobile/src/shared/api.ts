@@ -187,6 +187,87 @@ class APIClient {
     const token = await AsyncStorage.getItem(STORAGE_KEYS.AUTH_TOKEN);
     return !!token;
   }
+
+  /**
+   * POST request - Create Order
+   */
+  async createOrder<T = any>(data: any): Promise<T> {
+    try {
+      const response = await this.client.post<T>(
+        ENDPOINTS.CART.CREATE_ORDER,
+        data
+      );
+      return response.data;
+    } catch (error) {
+      throw this.handleError(error);
+    }
+  }
+
+  /**
+   * POST request - Register FCM Token
+   */
+  async registerFCMToken<T = any>(data: { token: string; platform: string }): Promise<T> {
+    try {
+      const response = await this.client.post<T>(
+        ENDPOINTS.FCM.REGISTER_TOKEN,
+        data
+      );
+      return response.data;
+    } catch (error) {
+      throw this.handleError(error);
+    }
+  }
+
+  /**
+   * POST request - Unregister FCM Token
+   */
+  async unregisterFCMToken<T = any>(data: { token: string }): Promise<T> {
+    try {
+      const response = await this.client.post<T>(
+        ENDPOINTS.FCM.UNREGISTER_TOKEN,
+        data
+      );
+      return response.data;
+    } catch (error) {
+      throw this.handleError(error);
+    }
+  }
+
+  /**
+   * POST request - Generic (for custom endpoints)
+   */
+  async post<T = any>(url: string, data: any, config?: any): Promise<T> {
+    try {
+      const response = await this.client.post<T>(url, data, config);
+      return response.data;
+    } catch (error) {
+      throw this.handleError(error);
+    }
+  }
+
+  /**
+   * PUT request - Generic
+   */
+  async put<T = any>(url: string, data: any, config?: any): Promise<T> {
+    try {
+      const response = await this.client.put<T>(url, data, config);
+      return response.data;
+    } catch (error) {
+      throw this.handleError(error);
+    }
+  }
+
+  /**
+   * DELETE request - Generic
+   */
+  async delete<T = any>(url: string, config?: any): Promise<T> {
+    try {
+      const response = await this.client.delete<T>(url, config);
+      return response.data;
+    } catch (error) {
+      throw this.handleError(error);
+    }
+  }
 }
 
 // Singleton instance
