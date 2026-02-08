@@ -1,0 +1,45 @@
+name: "CodeQL"
+
+on:
+  push:
+    branches: [ "main", "develop" ]  # solo ramas principales, no cada feature
+  pull_request:
+    branches: [ "main", "develop" ]
+  schedule:
+    - cron: '30 3 * * 1'  # lunes 3:30 AM UTC (~00:30 CL)
+
+permissions:
+  contents: read
+  security-events: write
+  packages: read
+  actions: read
+
+jobs:
+  analyze:
+    name: Analyze (${{ matrix.language }})
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        language: [ 'javascript-typescript', 'python' ]  # solo estos por ahora
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    # Inicializa CodeQL
+    - name: Initialize CodeQL
+      uses: github/codeql-action/init@v3
+      with:
+        languages: ${{ matrix.language }}
+        # Configuración fina por lenguaje
+        config-file: .github/codeql/codeql-config.yml  # archivo opcional abajo
+
+    # Autobuild (funciona bien para Python y JS/TS)
+    - name: Autobuild
+      uses: github/codeql-action/autobuild@v3
+
+    # Ejecuta análisis
+    - name: Perform CodeQL Analysis
+      uses: github/codeql-action/analyze@v3
