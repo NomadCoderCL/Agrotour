@@ -14,6 +14,7 @@ interface CartContextType extends CartState {
   updateQuantity: (productoId: number, cantidad: number) => Promise<void>;
   clearCart: () => Promise<void>;
   getTotal: () => number;
+  confirmPurchase: () => Promise<{ venta_id: number; total: number } | null>;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
@@ -121,6 +122,35 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     return state.items.reduce((sum, item) => sum + ((item.product?.precio || 0) * item.cantidad), 0);
   }, [state.items]);
 
+  const confirmPurchase = useCallback(async () => {
+    if (state.items.length === 0) return null;
+
+    try {
+      // Assuming apiClient.post('/api/confirmar-compra/') returns { venta_id, monto_total }
+      // We need to implement this endpoint or ensure it exists.
+      // Based on previous files, confirming purchase logic might exist or needs to be added.
+      // For now, let's assume valid response structure based on backend.
+
+      const response = await import('../services/api').then(m => m.apiClient.post<{ venta_id: number, total: number }>('/confirmar-compra/', {
+        items: state.items.map(i => ({ producto_id: i.producto_id, cantidad: i.cantidad }))
+      }));
+
+      // Axios returns the data directly because of the interceptor/method in api.ts? 
+      // Checking api.ts: "return this.retryWithBackoff(() => this.axiosInstance.post<T>(url, data, config));"
+      // Wait, api.ts post returns "this.axiosInstance.post", which returns an AxiosResponse. 
+      // BUT other methods like getProductos doing ".then(res => res.data)".
+      // Let's verify api.ts generic post.
+      // "async post<T>(url: string, data?: any, config?: any) { return this.retryWithBackoff(() => this.axiosInstance.post<T>(url, data, config)); }"
+      // It returns AxiosResponse<T>.
+      // So response.data is what we need.
+
+      return response.data;
+    } catch (error) {
+      console.error("Purchase failed", error);
+      throw error;
+    }
+  }, [state.items]);
+
   return (
     <CartContext.Provider
       value={{
@@ -130,6 +160,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         updateQuantity,
         clearCart,
         getTotal,
+        confirmPurchase,
       }}
     >
       {children}

@@ -21,7 +21,7 @@ from .models import (
 class UsuarioSerializer(serializers.ModelSerializer):
     class Meta:
         model = Usuario
-        fields = ['id', 'username', 'email', 'rol', 'direccion', 'telefono', 'password']
+        fields = ['id', 'username', 'email', 'rol', 'direccion', 'telefono', 'bio', 'whatsapp', 'sitio_web', 'password']
         extra_kwargs = {
             'password': {'write_only': True},
             'email': {'required': True},

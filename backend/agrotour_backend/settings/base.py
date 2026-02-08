@@ -222,16 +222,20 @@ LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
     'formatters': {
-        'json': {
-            '()': 'django.utils.log.ServerFormatter',
-            'format': '{levelname} {asctime} {module} {message}',
+        'verbose': {
+            'format': '{levelname} {asctime} {module} {process:d} {thread:d} {message}',
+            'style': '{',
+        },
+        'simple': {
+            'format': '{levelname} {message}',
             'style': '{',
         },
     },
     'handlers': {
         'console': {
+            'level': 'INFO',
             'class': 'logging.StreamHandler',
-            'formatter': 'json',
+            'formatter': 'verbose',
         },
     },
     'root': {
@@ -242,6 +246,11 @@ LOGGING = {
         'django': {
             'handlers': ['console'],
             'level': env('DJANGO_LOG_LEVEL', default='INFO'),
+            'propagate': False,
+        },
+        'aplicacion': {
+            'handlers': ['console'],
+            'level': 'DEBUG' if DEBUG else 'INFO',
             'propagate': False,
         },
     },
@@ -256,3 +265,7 @@ CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
 CELERY_TIMEZONE = TIME_ZONE
 
+# Ratelimit Configuration
+RATELIMIT_USE_CACHE = 'default'
+RATELIMIT_FAIL_OPEN = False
+RATELIMIT_VIEW_NAME = 'ratelimit_blocked' # Optional: custom view for 429

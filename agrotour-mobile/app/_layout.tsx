@@ -1,11 +1,10 @@
-import { useEffect } from "react";
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
+import { StripeProvider } from '@stripe/stripe-react-native';
 import "react-native-reanimated";
 
-import { initializeSqliteDB } from "@/services/SqliteDB";
-import { AuthProvider } from "@/contexts/AuthContextV2";
-import { CartProvider } from "@/contexts/CartContextV2";
+import { AuthProvider } from "@/contexts/AuthContext";
+import { CartProvider } from "@/contexts/CartContext";
 import { SyncProvider } from "@/contexts/SyncContext";
 import { DarkModeProvider } from "@/contexts/DarkModeContext";
 import { PushNotificationProvider } from "@/contexts/PushNotificationContext";
@@ -17,12 +16,6 @@ export const unstable_settings = {
 };
 
 function RootLayoutContent() {
-  useEffect(() => {
-    initializeSqliteDB()
-      .then(() => console.log("[RootLayout] SQLite initialized"))
-      .catch((err) => console.error("[RootLayout] SQLite failed:", err));
-  }, []);
-
   return (
     <GlobalErrorBoundary>
       <Stack>
@@ -35,7 +28,10 @@ function RootLayoutContent() {
 }
 
 export default function RootLayout() {
-  return (
+  <StripeProvider
+    publishableKey="pk_test_51Q59wF2N3O4aV8Z6qL9iX7jR1K2m3n4o5p6q7r8s9t0" // Replace with env var later
+    merchantIdentifier="merchant.com.nomadcodercl.agrotour" // optional
+  >
     <DarkModeProvider>
       <AuthProvider>
         <CartProvider>
@@ -48,5 +44,5 @@ export default function RootLayout() {
         </CartProvider>
       </AuthProvider>
     </DarkModeProvider>
-  );
+  </StripeProvider>
 }

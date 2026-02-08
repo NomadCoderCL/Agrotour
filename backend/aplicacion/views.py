@@ -4,6 +4,7 @@ from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework_simplejwt.tokens import RefreshToken
+from django_ratelimit.decorators import ratelimit
 from django.db import transaction
 from django.http import HttpResponse
 from io import BytesIO
@@ -48,6 +49,7 @@ class StandardResultsSetPagination(PageNumberPagination):
 @swagger_auto_schema(method='post', operation_description="Registro de usuario.")
 @api_view(['POST'])
 @permission_classes([AllowAny])
+@ratelimit(key='ip', rate='3/h', block=True)
 def registro(request):
     username = request.data.get('username')
     email = request.data.get('email')
@@ -71,6 +73,7 @@ def registro(request):
 @swagger_auto_schema(method='post', operation_description="Login de usuario optimizado para mobile.")
 @api_view(['POST'])
 @permission_classes([AllowAny])
+@ratelimit(key='ip', rate='10/m', block=True)
 def login(request):
     username = request.data.get('username')
     password = request.data.get('password')

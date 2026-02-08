@@ -63,18 +63,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setState((prev) => ({ ...prev, isLoading: true, error: null }));
 
     try {
+      // Call Django login endpoint
       const response = await apiClient.post<AuthResponse>('/auth/login/', {
         username,
         password,
       });
 
-      // Persist tokens
+      // Persist tokens and user data
       await Promise.all([
         AsyncStorage.setItem(STORAGE_KEYS.AUTH_TOKEN, response.access),
         AsyncStorage.setItem(STORAGE_KEYS.REFRESH_TOKEN, response.refresh),
         AsyncStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(response.user)),
       ]);
 
+      // Update state
       setState({
         user: response.user,
         token: response.access,
@@ -83,11 +85,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         isLoading: false,
         error: null,
       });
+
+      // Register FCM token for push notifications (if available)
+      try {
+        // TODO: Get actual FCM token from expo-notifications
+        // For now, we'll skip this and implement later
+        // await apiClient.post('/auth/fcm-token/', { fcm_token: 'placeholder' });
+      } catch (fcmError) {
+        console.error('FCM token registration failed:', fcmError);
+        // Don't fail login if FCM fails
+      }
     } catch (error: any) {
       setState((prev) => ({
         ...prev,
         isLoading: false,
-        error: error.message || 'Login failed',
+        error: error.response?.data?.detail || 'Login failed',
       }));
       throw error;
     }
@@ -98,7 +110,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setState((prev) => ({ ...prev, isLoading: true, error: null }));
 
       try {
-        const response = await apiClient.post<AuthResponse>('/auth/register/', {
+        const response = await apiClient.post<AuthResponse>('/auth/registro/', {
           username,
           email,
           password,
@@ -133,8 +145,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const logout = useCallback(async () => {
     try {
-      // Call logout endpoint
-      await apiClient.post('/auth/logout/', {});
+      // Call logout endpoint (mobile-specific)
+      await apiClient.post('/auth/logout-mobile/', {});
     } catch (error) {
       console.error('Logout API call failed:', error);
     } finally {

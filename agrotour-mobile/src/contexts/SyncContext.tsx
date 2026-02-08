@@ -1,180 +1,168 @@
 import React, { createContext, useContext, useEffect, useState, useCallback, ReactNode } from 'react';
-import { getSqliteDB } from '@/services/SqliteDB';
-import { apiClient } from '@/shared/api';
-import { globalErrorStore } from '@/services/GlobalErrorStore';
-import { useAuth } from './AuthContextV2';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { apiClient } from '../shared/api';
+import { globalErrorStore } from '../services/GlobalErrorStore';
+import { useAuth } from './AuthContext';
 
 export interface SyncOperation {
   id: string;
-  op_json: string;
-  entity_type: string;
-  status: 'pending' | 'synced' | 'failed';
+  type: 'cart_item' | 'order' | 'review';
+  data: any;
+  status: 'pending' | 'failed';
   retry_count: number;
   created_at: string;
-  updated_at: string;
 }
 
 interface SyncContextType {
   isSyncing: boolean;
   pendingCount: number;
   lastSyncTime: string | null;
-  addSyncOperation: (entityType: string, operation: any) => Promise<void>;
+  addSyncOperation: (type: SyncOperation['type'], data: any) => Promise<void>;
   syncNow: () => Promise<void>;
   clearSyncQueue: () => Promise<void>;
 }
 
 const SyncContext = createContext<SyncContextType | undefined>(undefined);
 
-interface SyncProviderProps {
-  children: ReactNode;
-}
+const SYNC_QUEUE_KEY = 'sync_queue_operations';
+const LAST_SYNC_KEY = 'last_sync_time';
 
-export function SyncProvider({ children }: SyncProviderProps) {
+export function SyncProvider({ children }: { children: ReactNode }) {
   const { isAuthenticated } = useAuth();
   const [isSyncing, setIsSyncing] = useState(false);
-  const [pendingCount, setPendingCount] = useState(0);
+  const [queue, setQueue] = useState<SyncOperation[]>([]);
   const [lastSyncTime, setLastSyncTime] = useState<string | null>(null);
 
-  // Cargar estado inicial
+  // Load initial state
   useEffect(() => {
-    const loadInitialState = async () => {
+    const loadState = async () => {
       try {
-        const db = getSqliteDB();
-        const stats = await db.getStats();
-        setPendingCount(stats.sync_queue_count);
-        
-        // Cargar último sync time
-        const lastSync = localStorage.getItem('lastSyncTime');
+        const storedQueue = await AsyncStorage.getItem(SYNC_QUEUE_KEY);
+        if (storedQueue) {
+          setQueue(JSON.parse(storedQueue));
+        }
+
+        const lastSync = await AsyncStorage.getItem(LAST_SYNC_KEY);
         if (lastSync) setLastSyncTime(lastSync);
       } catch (err) {
-        console.error('[SyncProvider] Failed to load initial state:', err);
+        console.error('[SyncProvider] Failed to load state:', err);
       }
     };
-    loadInitialState();
+    loadState();
   }, []);
 
-  // Auto-sync cada 30 segundos si hay items pendientes
+  // Persist queue whenever it changes
   useEffect(() => {
-    if (!isAuthenticated || !pendingCount) return;
+    const saveQueue = async () => {
+      try {
+        await AsyncStorage.setItem(SYNC_QUEUE_KEY, JSON.stringify(queue));
+      } catch (err) {
+        console.error('[SyncProvider] Failed to save queue:', err);
+      }
+    };
+    saveQueue();
+  }, [queue]);
 
-    const syncInterval = setInterval(() => {
-      syncNow();
+  // Auto-sync
+  useEffect(() => {
+    if (!isAuthenticated || queue.length === 0) return;
+
+    const interval = setInterval(() => {
+      if (!isSyncing) syncNow();
     }, 30000);
 
-    return () => clearInterval(syncInterval);
-  }, [isAuthenticated, pendingCount]);
+    return () => clearInterval(interval);
+  }, [isAuthenticated, queue.length, isSyncing]);
 
-  const addSyncOperation = useCallback(
-    async (entityType: string, operation: any) => {
-      try {
-        const db = getSqliteDB();
-        await db.addSyncOperation(entityType, operation);
-        
-        // Actualizar contador
-        const stats = await db.getStats();
-        setPendingCount(stats.sync_queue_count);
-      } catch (err) {
-        console.error('[SyncProvider] Failed to add sync operation:', err);
-        throw err;
-      }
-    },
-    []
-  );
+  const addSyncOperation = useCallback(async (type: SyncOperation['type'], data: any) => {
+    const newOp: SyncOperation = {
+      id: Date.now().toString(),
+      type,
+      data,
+      status: 'pending',
+      retry_count: 0,
+      created_at: new Date().toISOString(),
+    };
+
+    setQueue(prev => [...prev, newOp]);
+  }, []);
 
   const syncNow = useCallback(async () => {
-    if (!isAuthenticated || isSyncing) return;
+    if (!isAuthenticated || isSyncing || queue.length === 0) return;
 
     setIsSyncing(true);
+    let updatedQueue = [...queue];
+    let hasChanges = false;
+
     try {
-      const db = getSqliteDB();
-      const pending = await db.getPendingSyncOperations();
+      // Process pending items
+      const pending = updatedQueue.filter(op => op.status === 'pending');
 
-      if (pending.length === 0) {
-        setIsSyncing(false);
-        return;
-      }
+      for (const op of pending) {
+        try {
+          if (op.type === 'cart_item') {
+            await apiClient.post('/cart/items/', op.data);
+          } else if (op.type === 'order') {
+            await apiClient.post('/orders/', op.data);
+          } else if (op.type === 'review') {
+            await apiClient.post('/reviews/', op.data);
+          }
 
-      // Procesar en lotes de 5
-      for (let i = 0; i < pending.length; i += 5) {
-        const batch = pending.slice(i, i + 5);
-        
-        for (const op of batch) {
-          try {
-            const operation = JSON.parse(op.op_json);
-            
-            // Ejecutar operación según tipo
-            let response;
-            if (op.entity_type === 'cart_item') {
-              response = await apiClient.post('/cart/items/', operation);
-            } else if (op.entity_type === 'order') {
-              response = await apiClient.post('/orders/', operation);
-            } else if (op.entity_type === 'review') {
-              response = await apiClient.post('/reviews/', operation);
-            }
+          // Success: remove from queue
+          updatedQueue = updatedQueue.filter(item => item.id !== op.id);
+          hasChanges = true;
 
-            // Marcar como synced
-            await db.updateSyncStatus(op.id, 'synced');
-            await db.deleteSyncOperation(op.id);
-          } catch (err: any) {
-            // Incrementar retry count
-            if (op.retry_count < 3) {
-              await db.incrementRetryCount(op.id);
-            } else {
-              // Después de 3 intentos, fallar
-              await db.updateSyncStatus(op.id, 'failed');
+        } catch (err) {
+          console.error(`[SyncProvider] Op ${op.id} failed:`, err);
+          // Increment retry
+          const index = updatedQueue.findIndex(item => item.id === op.id);
+          if (index !== -1) {
+            updatedQueue[index].retry_count += 1;
+            if (updatedQueue[index].retry_count >= 3) {
+              updatedQueue[index].status = 'failed';
               globalErrorStore.setError(
                 'NETWORK_ERROR',
-                'No se pudo sincronizar algunos cambios. Intentaremos más tarde.',
-                { entity: op.entity_type, retries: 3 }
+                'No se pudo sincronizar algunos cambios.',
+                { entity: op.type }
               );
             }
+            hasChanges = true;
           }
         }
       }
 
-      // Actualizar estado final
-      const stats = await db.getStats();
-      setPendingCount(stats.sync_queue_count);
-      setLastSyncTime(new Date().toISOString());
-      localStorage.setItem('lastSyncTime', new Date().toISOString());
+      if (hasChanges) {
+        setQueue(updatedQueue);
+      }
+
+      const now = new Date().toISOString();
+      setLastSyncTime(now);
+      await AsyncStorage.setItem(LAST_SYNC_KEY, now);
+
     } catch (err) {
       console.error('[SyncProvider] Sync failed:', err);
-      globalErrorStore.setError(
-        'NETWORK_ERROR',
-        'Error de sincronización. Reintentar en 30 segundos.',
-        { error: String(err) }
-      );
     } finally {
       setIsSyncing(false);
     }
-  }, [isAuthenticated, isSyncing]);
+  }, [isAuthenticated, isSyncing, queue]);
 
   const clearSyncQueue = useCallback(async () => {
-    try {
-      const db = getSqliteDB();
-      const pending = await db.getPendingSyncOperations();
-      
-      for (const op of pending) {
-        await db.deleteSyncOperation(op.id);
-      }
-      
-      setPendingCount(0);
-    } catch (err) {
-      console.error('[SyncProvider] Failed to clear sync queue:', err);
-      throw err;
-    }
+    setQueue([]);
+    await AsyncStorage.removeItem(SYNC_QUEUE_KEY);
   }, []);
 
-  const value: SyncContextType = {
-    isSyncing,
-    pendingCount,
-    lastSyncTime,
-    addSyncOperation,
-    syncNow,
-    clearSyncQueue,
-  };
-
-  return <SyncContext.Provider value={value}>{children}</SyncContext.Provider>;
+  return (
+    <SyncContext.Provider value={{
+      isSyncing,
+      pendingCount: queue.length,
+      lastSyncTime,
+      addSyncOperation,
+      syncNow,
+      clearSyncQueue,
+    }}>
+      {children}
+    </SyncContext.Provider>
+  );
 }
 
 export function useSync() {

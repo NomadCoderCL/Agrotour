@@ -238,6 +238,17 @@ class ApiClient {
     }
 
     /**
+     * STRIPE PAYMENTS
+     */
+    async createPaymentIntent(ventaId: number): Promise<{ client_secret: string; publishable_key: string }> {
+        return this.retryWithBackoff(() =>
+            this.axiosInstance
+                .post("/payments/create-intent/", { venta_id: ventaId })
+                .then((res) => res.data)
+        );
+    }
+
+    /**
      * ==================
      * GENERIC HTTP METHODS
      * ==================

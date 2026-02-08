@@ -3,15 +3,16 @@ import { useState } from 'react';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 
-import { useDarkMode } from '@/contexts/DarkModeContext';
-import { useCart } from '@/contexts/CartContextV2';
-import { useSync } from '@/contexts/SyncContext';
-import { globalErrorStore } from '@/services/GlobalErrorStore';
-import { CartItem } from '@/shared/types';
+import { useDarkMode } from '../../src/contexts/DarkModeContext';
+import { useCart } from '../../src/contexts/CartContext';
+import { useSync } from '../../src/contexts/SyncContext';
+import { globalErrorStore } from '../../src/services/GlobalErrorStore';
+import { CartItem } from '../../src/shared/types';
+import { Button } from '../../src/components/UI';
 
 export default function CarritoScreen() {
   const { colors } = useDarkMode();
-  const { items, total, removeItem, updateQuantity, clearCart } = useCart();
+  const { items, total, removeItem, updateQuantity, clearCart, confirmPurchase } = useCart();
   const router = useRouter();
   const [isCheckingOut, setIsCheckingOut] = useState(false);
 
@@ -28,9 +29,17 @@ export default function CarritoScreen() {
 
     setIsCheckingOut(true);
     try {
-      // Aquí iría la lógica de checkout
-      // Por ahora solo navegamos
-      router.push('/(tabs)'); // Provisional
+      const result = await confirmPurchase();
+      if (result) {
+        // Navigate to CheckoutScreen with params
+        router.push({
+          pathname: "/screens/checkout/CheckoutScreen",
+          params: { ventaId: result.venta_id, monto: result.total }
+        });
+      }
+    } catch (error) {
+      console.error("Checkout error:", error);
+      // ErrorToast will handle the display via GlobalErrorStore or we can show an alert here
     } finally {
       setIsCheckingOut(false);
     }
@@ -49,17 +58,17 @@ export default function CarritoScreen() {
 
       <View style={styles.itemDetails}>
         <Text style={[styles.itemName, { color: colors.text }]}>
-          {item.nombre}
+          {item.product?.nombre || 'Producto desconocido'}
         </Text>
         <Text style={[styles.itemPrice, { color: colors.primary }]}>
-          ${item.precio}
+          ${(item.product?.precio || 0).toLocaleString()}
         </Text>
       </View>
 
       <View style={styles.quantityControl}>
         <TouchableOpacity
           style={[styles.quantityButton, { borderColor: colors.border }]}
-          onPress={() => handleQuantityChange(item.id, item.cantidad - 1)}
+          onPress={() => handleQuantityChange(item.producto_id, item.cantidad - 1)}
           activeOpacity={0.6}
         >
           <Ionicons name="remove" size={16} color={colors.text} />
@@ -71,7 +80,7 @@ export default function CarritoScreen() {
 
         <TouchableOpacity
           style={[styles.quantityButton, { borderColor: colors.border }]}
-          onPress={() => handleQuantityChange(item.id, item.cantidad + 1)}
+          onPress={() => handleQuantityChange(item.producto_id, item.cantidad + 1)}
           activeOpacity={0.6}
         >
           <Ionicons name="add" size={16} color={colors.text} />
@@ -80,7 +89,7 @@ export default function CarritoScreen() {
 
       <TouchableOpacity
         style={styles.removeButton}
-        onPress={() => removeItem(item.id)}
+        onPress={() => removeItem(item.producto_id)}
         activeOpacity={0.6}
       >
         <Ionicons name="trash-outline" size={18} color={colors.primary} />
@@ -110,7 +119,7 @@ export default function CarritoScreen() {
           <FlatList
             data={items}
             renderItem={renderCartItem}
-            keyExtractor={(item) => item.id.toString()}
+            keyExtractor={(item) => item.producto_id.toString()}
             contentContainerStyle={styles.listContent}
             scrollEnabled={false}
           />

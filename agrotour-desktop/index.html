@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8" />
+  <link rel="stylesheet" href="styles.css" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Agrotour AI Assistant</title>
+</head>
+
+<body>
+  <div class="container">
+    <header>
+      <h1>🤖 Asistente IA Agrotour</h1>
+      <p class="subtitle">Modelo: Qwen2.5-3B (Offline) | Asegúrate de tener Ollama corriendo</p>
+    </header>
+
+    <div id="messages-container" class="messages-container"></div>
+
+    <div class="actions">
+      <button id="analyze-button" class="btn btn-success">
+        📊 Analizar Stock (Demo)
+      </button>
+    </div>
+
+    <div class="input-container">
+      <input id="message-input" type="text" placeholder="Escribe tu pregunta..." class="message-input" />
+      <button id="send-button" class="btn btn-primary">Enviar</button>
+    </div>
+  </div>
+
+  <script type="module" src="/src/main.ts"></script>
+</body>
+
+</html>

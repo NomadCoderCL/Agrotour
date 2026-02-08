@@ -1,1 +1,71 @@
-/**\n * Global Error Store for API Contract Mismatches\n * Centralized error handling without crashing the app\n */\n\nexport type ErrorType = 'CONTRACT_MISMATCH' | 'SERVER_ERROR' | 'NETWORK_ERROR' | 'TIMEOUT' | 'NONE';\n\nexport interface GlobalError {\n  type: ErrorType;\n  message: string;\n  retry: boolean;\n  timestamp: number;\n  details?: any;\n}\n\nclass GlobalErrorStore {\n  private subscribers: Set<(error: GlobalError | null) => void> = new Set();\n  private currentError: GlobalError | null = null;\n\n  /**\n   * Set error and notify subscribers\n   */\n  setError(type: ErrorType, message: string, details?: any): void {\n    this.currentError = {\n      type,\n      message,\n      retry: type === 'CONTRACT_MISMATCH' || type === 'SERVER_ERROR' || type === 'TIMEOUT',\n      timestamp: Date.now(),\n      details,\n    };\n    console.warn(`[GlobalError] ${type}: ${message}`, details);\n    this.notifySubscribers();\n  }\n\n  /**\n   * Clear current error\n   */\n  clearError(): void {\n    this.currentError = null;\n    this.notifySubscribers();\n  }\n\n  /**\n   * Get current error\n   */\n  getError(): GlobalError | null {\n    return this.currentError;\n  }\n\n  /**\n   * Subscribe to error changes\n   */\n  subscribe(callback: (error: GlobalError | null) => void): () => void {\n    this.subscribers.add(callback);\n    // Return unsubscribe function\n    return () => {\n      this.subscribers.delete(callback);\n    };\n  }\n\n  /**\n   * Notify all subscribers\n   */\n  private notifySubscribers(): void {\n    this.subscribers.forEach((callback) => {\n      callback(this.currentError);\n    });\n  }\n}\n\nexport const globalErrorStore = new GlobalErrorStore();\n
+/**
+ * Global Error Store for API Contract Mismatches
+ * Centralized error handling without crashing the app
+ */
+
+export type ErrorType = 'CONTRACT_MISMATCH' | 'SERVER_ERROR' | 'NETWORK_ERROR' | 'TIMEOUT' | 'NONE';
+
+export interface GlobalError {
+    type: ErrorType;
+    message: string;
+    retry: boolean;
+    timestamp: number;
+    details?: any;
+}
+
+class GlobalErrorStore {
+    private subscribers: Set<(error: GlobalError | null) => void> = new Set();
+    private currentError: GlobalError | null = null;
+
+    /**
+     * Set error and notify subscribers
+     */
+    setError(type: ErrorType, message: string, details?: any): void {
+        this.currentError = {
+            type,
+            message,
+            retry: type === 'CONTRACT_MISMATCH' || type === 'SERVER_ERROR' || type === 'TIMEOUT',
+            timestamp: Date.now(),
+            details,
+        };
+        console.warn(`[GlobalError] ${type}: ${message}`, details);
+        this.notifySubscribers();
+    }
+
+    /**
+     * Clear current error
+     */
+    clearError(): void {
+        this.currentError = null;
+        this.notifySubscribers();
+    }
+
+    /**
+     * Get current error
+     */
+    getError(): GlobalError | null {
+        return this.currentError;
+    }
+
+    /**
+     * Subscribe to error changes
+     */
+    subscribe(callback: (error: GlobalError | null) => void): () => void {
+        this.subscribers.add(callback);
+        // Return unsubscribe function
+        return () => {
+            this.subscribers.delete(callback);
+        };
+    }
+
+    /**
+     * Notify all subscribers
+     */
+    private notifySubscribers(): void {
+        this.subscribers.forEach((callback) => {
+            callback(this.currentError);
+        });
+    }
+}
+
+export const globalErrorStore = new GlobalErrorStore();

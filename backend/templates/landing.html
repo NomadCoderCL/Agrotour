@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agrotour | Empodera tu Campo</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Outfit', sans-serif;
+        }
+
+        .glass {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .text-gradient {
+            background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+    </style>
+</head>
+
+<body class="bg-slate-50 text-slate-900 selection:bg-emerald-100 selection:text-emerald-900">
+
+    <!-- Navigation -->
+    <nav class="fixed w-full z-50 transition-all duration-300">
+        <div class="max-w-7xl mx-auto px-6 py-5 flex justify-between items-center bg-white/50 backdrop-blur-md">
+            <div class="flex items-center space-x-2">
+                <div class="w-8 h-8 bg-emerald-600 rounded-lg flex items-center justify-center">
+                    <span class="text-white font-bold">A</span>
+                </div>
+                <span class="text-xl font-bold tracking-tight">Agrotour</span>
+            </div>
+            <div class="hidden md:flex space-x-8 text-sm font-medium">
+                <a href="#features" class="hover:text-emerald-600 transition-colors">Beneficios</a>
+                <a href="#how-it-works" class="hover:text-emerald-600 transition-colors">Cómo Funciona</a>
+                <a href="#contact" class="hover:text-emerald-600 transition-colors">Piloto</a>
+            </div>
+            <a href="/auth/registro/"
+                class="px-5 py-2.5 bg-slate-900 text-white text-sm font-semibold rounded-full hover:bg-slate-800 transition-all active:scale-95 shadow-lg shadow-slate-200">
+                Unirse al Gremio
+            </a>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="relative pt-32 pb-20 md:pt-48 md:pb-32 overflow-hidden">
+        <div class="max-w-7xl mx-auto px-6 relative z-10">
+            <div class="max-w-3xl">
+                <div
+                    class="inline-flex items-center px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 text-xs font-bold uppercase tracking-wider mb-6 border border-emerald-100">
+                    🚀 Programa Piloto Phase 2C
+                </div>
+                <h1 class="text-5xl md:text-7xl font-bold leading-[1.1] mb-8">
+                    Lleva tu campo al <span class="text-gradient">Mercado Digital</span>
+                </h1>
+                <p class="text-lg md:text-xl text-slate-600 mb-10 leading-relaxed max-w-2xl">
+                    Agrotour conecta a productores locales con viajeros y consumidores responsables. Gestiona ventas,
+                    stock y experiencias turísticas desde una sola App.
+                </p>
+                <div class="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4">
+                    <button
+                        class="px-8 py-4 bg-emerald-600 text-white font-bold rounded-2xl hover:bg-emerald-700 transition-all hover:shadow-2xl hover:shadow-emerald-200 active:scale-95">
+                        Registrar mi Productora
+                    </button>
+                    <button
+                        class="px-8 py-4 bg-white text-slate-900 font-bold rounded-2xl border border-slate-200 hover:bg-slate-50 transition-all active:scale-95">
+                        Ver Demo Mobile
+                    </button>
+                </div>
+            </div>
+        </div>
+        <!-- Decorative blobs -->
+        <div
+            class="absolute top-0 right-0 -z-0 w-1/2 h-full bg-gradient-to-l from-emerald-50/50 to-transparent pointer-events-none">
+        </div>
+        <div
+            class="absolute top-1/4 -right-20 w-80 h-80 bg-emerald-200 rounded-full blur-[100px] opacity-30 animate-pulse">
+        </div>
+    </section>
+
+    <!-- Features -->
+    <section id="features" class="py-20 bg-white">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-12">
+                <div class="space-y-4">
+                    <div class="w-12 h-12 bg-emerald-100 rounded-2xl flex items-center justify-center text-emerald-600">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                    </div>
+                    <h3 class="text-xl font-bold">Pagos Instantáneos</h3>
+                    <p class="text-slate-600">Integración nativa con Stripe. Recibe el 85% de tus ventas directamente en
+                        tu cuenta bancaria.</p>
+                </div>
+                <div class="space-y-4">
+                    <div class="w-12 h-12 bg-blue-100 rounded-2xl flex items-center justify-center text-blue-600">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                        </svg>
+                    </div>
+                    <h3 class="text-xl font-bold">Turismo Geocalizado</h3>
+                    <p class="text-slate-600">Atrae visitantes a tu campo mediante nuestro sistema intuitivo de eventos
+                        y rutas turísticas.</p>
+                </div>
+                <div class="space-y-4">
+                    <div class="w-12 h-12 bg-purple-100 rounded-2xl flex items-center justify-center text-purple-600">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z" />
+                        </svg>
+                    </div>
+                    <h3 class="text-xl font-bold">Control de Stock</h3>
+                    <p class="text-slate-600">App móvil optimizada con SQLite para funcionar incluso en zonas rurales
+                        sin conexión a internet.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-slate-900 py-12 text-slate-400">
+        <div class="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center">
+            <div class="flex items-center space-x-2 text-white mb-6 md:mb-0">
+                <span class="text-xl font-bold tracking-tight">Agrotour</span>
+                <span class="text-xs text-slate-500">© 2026</span>
+            </div>
+            <div class="flex space-x-8 text-sm">
+                <a href="#" class="hover:text-white transition-colors">Términos</a>
+                <a href="#" class="hover:text-white transition-colors">Privacidad</a>
+                <a href="#" class="hover:text-white transition-colors">Soporte</a>
+            </div>
+        </div>
+    </footer>
+
+</body>
+
+</html>

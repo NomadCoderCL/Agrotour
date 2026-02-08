@@ -25,9 +25,11 @@ django-celery-beat
 
 # Push Notifications
 firebase-admin
+stripe
 
 # Performance & Security
 django-ratelimit
+sentry-sdk[django]
 gunicorn
 
 # Utility & Data

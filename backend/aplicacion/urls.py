@@ -41,6 +41,9 @@ from .views import (
     register_fcm_token,
     logout_mobile,
 )
+from .views_landing import landing_page, privacy_policy, terms_service
+from .views_sync import sync_push_view, sync_pull_view
+from .views_payments import create_payment_intent_view, stripe_webhook_view
 from .views_images import ImageUploadView
 from .views_auth import GoogleLogin, FacebookLogin
 
@@ -91,7 +94,10 @@ def api_root(request):
 
 # URLs principales
 urlpatterns = [
-    path('', api_root, name='api_root'),
+    path('', landing_page, name='landing'),
+    path('privacy/', privacy_policy, name='privacy_policy'),
+    path('terms/', terms_service, name='terms_service'),
+    path('api-root/', api_root, name='api_root'),
     path('auth/registro/', registro, name='registro'),
     path('auth/login/', login, name='login'),
     path('auth/validate-token/', validate_token, name='validate_token'),
@@ -109,6 +115,14 @@ urlpatterns = [
     path('auth/fcm-token/', register_fcm_token, name='register_fcm_token'),
     path('auth/logout-mobile/', logout_mobile, name='logout_mobile'),
     path('api/productos/batch/', productos_batch, name='productos_batch'),
+    
+    # Stripe Payments
+    path('api/payments/create-intent/', create_payment_intent_view, name='create_payment_intent'),
+    path('api/payments/webhook/', stripe_webhook_view, name='stripe_webhook'),
+    
+    # Mobile Sync Engine
+    path('api/sync/push/', sync_push_view, name='sync_push'),
+    path('api/sync/pull/', sync_pull_view, name='sync_pull'),
 
     path('api/', include(router.urls)),
     

@@ -8,9 +8,12 @@ class Usuario(AbstractUser):
         ('productor', 'Productor'),
         ('admin', 'Administrador'),
     )
-    rol = models.CharField(max_length=10, choices=ROLES, default='cliente')
+    rol = models.CharField(max_length=10, choices=ROLES, default='cliente', db_index=True)
     direccion = models.CharField(max_length=255, blank=True, null=True)
     telefono = models.CharField(max_length=15, blank=True, null=True)
+    bio = models.TextField(blank=True, null=True, help_text="Breve biografía del productor")
+    whatsapp = models.CharField(max_length=15, blank=True, null=True, help_text="Número de WhatsApp para contacto directo")
+    sitio_web = models.URLField(blank=True, null=True, help_text="URL de sitio web o red social principal")
     token_social = models.TextField(blank=True, null=True)  # Para guardar el token de redes sociales
 
     def __str__(self):
@@ -66,9 +69,21 @@ class Venta(models.Model):
         related_name='ventas_productor',
         limit_choices_to={'rol': 'productor'}
     )
-    fecha_venta = models.DateTimeField(auto_now_add=True)
+    fecha_venta = models.DateTimeField(auto_now_add=True, db_index=True)
     monto_total = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
     
+    # Stripe & Pago
+    ESTADO_PAGO_CHOICES = [
+        ('pendiente', 'Pendiente'),
+        ('pagado', 'Pagado'),
+        ('fallido', 'Fallido'),
+        ('reembolsado', 'Reembolsado'),
+    ]
+    estado_pago = models.CharField(max_length=20, choices=ESTADO_PAGO_CHOICES, default='pendiente', db_index=True)
+    stripe_payment_intent_id = models.CharField(max_length=255, blank=True, null=True, db_index=True)
+    monto_comision = models.DecimalField(max_digits=10, decimal_places=2, default=0.00, help_text="15% plataforma")
+    monto_neto_productor = models.DecimalField(max_digits=10, decimal_places=2, default=0.00, help_text="85% productor")
+
     # Nuevos campos para Fase 1
     cupon_aplicado = models.ForeignKey('Cupon', on_delete=models.SET_NULL, null=True, blank=True)
     descuento_cupon = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
