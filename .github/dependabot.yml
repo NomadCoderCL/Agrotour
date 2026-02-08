@@ -1,0 +1,111 @@
+version: 2
+updates:
+  # Django Backend (Core)
+  - package-ecosystem: "pip"
+    directory: "/backend"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 4
+    rebase-strategy: "auto"
+    commit-message:
+      prefix: "chore(deps-backend):"
+      include: "scope"
+    groups:
+      python-minor-patch:
+        patterns: ["*"]
+        update-types: ["minor", "patch"]
+        exclude-patterns: ["django", "djangorestframework", "celery"]
+    labels:
+      - "dependencies"
+      - "python"
+      - "backend"
+      - "security"
+    assignees:
+      - "NomadCoderCL"
+    reviewers:
+      - "NomadCoderCL"
+
+  # FastAPI Sync Engine
+  - package-ecosystem: "pip"
+    directory: "/backend-sync"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 3
+    rebase-strategy: "auto"
+    commit-message:
+      prefix: "chore(deps-sync):"
+    labels:
+      - "dependencies"
+      - "python"
+      - "sync"
+      - "security"
+    assignees:
+      - "NomadCoderCL"
+
+  # Frontend Web (React/TS)
+  - package-ecosystem: "npm"
+    directory: "/frontend2"
+    schedule:
+      interval: "weekly"
+      day: "tuesday"
+    open-pull-requests-limit: 5
+    rebase-strategy: "auto"
+    commit-message:
+      prefix: "chore(deps-web):"
+    ignore:
+      - dependency-name: "react"
+        versions: [">=19.0.0"]
+      - dependency-name: "typescript"
+        versions: [">=5.5.0"]
+    groups:
+      web-minor-patch:
+        patterns: ["*"]
+        update-types: ["minor", "patch"]
+    labels:
+      - "dependencies"
+      - "javascript"
+      - "frontend"
+      - "security"
+    assignees:
+      - "NomadCoderCL"
+
+  # Mobile (Expo / React Native)
+  - package-ecosystem: "npm"
+    directory: "/agrotour-mobile"
+    schedule:
+      interval: "weekly"
+      day: "wednesday"
+    open-pull-requests-limit: 3
+    rebase-strategy: "auto"
+    commit-message:
+      prefix: "chore(deps-mobile):"
+    ignore:
+      - dependency-name: "expo"
+        versions: [">=51.0.0"]          # ajusta según tu SDK actual
+      - dependency-name: "expo-*"
+        update-types: ["major"]
+      - dependency-name: "react-native"
+        versions: [">=0.75.0"]
+    # NO groups aquí: mejor PRs individuales en mobile para detectar breaks rápido
+    labels:
+      - "dependencies"
+      - "react-native"
+      - "mobile"
+      - "security"
+    assignees:
+      - "NomadCoderCL"
+
+  # GitHub Actions
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+    commit-message:
+      prefix: "chore(deps-actions):"
+    labels:
+      - "dependencies"
+      - "github-actions"
+    assignees:
+      - "NomadCoderCL"
