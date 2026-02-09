@@ -3,14 +3,15 @@
  * Maneja la cola de operaciones y sincronización con el backend
  */
 
-import { apiClient } from "./api";
+import { apiClient } from "../shared/api";
 import { localDb } from "./local-db";
 import {
     SyncOperation,
     SyncPushPayload,
+    SyncPushResponse,
     OperationType,
     EntityType,
-} from "../types/models";
+} from "../shared/types";
 
 export class MobileSyncClient {
     private deviceId: string;
@@ -56,8 +57,12 @@ export class MobileSyncClient {
             const pendingOps = await localDb.getSyncOperations();
             if (pendingOps.length === 0) return { success: true, message: "No pending ops" };
 
-            const payload: SyncPushPayload = { operations: pendingOps };
-            const response = await apiClient.syncPush(payload);
+            const payload: SyncPushPayload = {
+                operations: pendingOps,
+                device_id: this.deviceId,
+                client_version: '2.0.0',
+            };
+            const response = await apiClient.post<SyncPushResponse>('/sync/push/', payload);
 
             // Limpiar operaciones aceptadas
             for (const op of response.accepted) {
@@ -66,8 +71,7 @@ export class MobileSyncClient {
 
             // Actualizar estado de sync
             await localDb.updateSyncState({
-                last_sync: new Date().toISOString(),
-                last_lamport_ts: response.new_lamport_ts,
+                lastSync: new Date().toISOString(),
             });
 
             return { success: response.conflicts_detected === 0 };

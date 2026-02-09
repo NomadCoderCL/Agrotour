@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from 'react';
-import { useAuth } from '@/contexts/AuthContextV2';
+import { useAuth } from '@/contexts/AuthContext';
 import { globalErrorStore } from '@/services/GlobalErrorStore';
 
 /**

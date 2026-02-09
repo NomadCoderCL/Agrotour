@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { Ionicons } from '@expo/vector-icons';
 
 import { useDarkMode } from '@/contexts/DarkModeContext';
-import { useAuth } from '@/contexts/AuthContextV2';
+import { useAuth } from '@/contexts/AuthContext';
 import { globalErrorStore } from '@/services/GlobalErrorStore';
 
 export default function PanelScreen() {
@@ -98,7 +98,7 @@ export default function PanelScreen() {
   const renderProducts = () => (
     <ScrollView contentContainerStyle={styles.tabContent}>
       <View style={styles.section}>
-        <Button title="Agregar Producto" variant="primary" onPress={() => {}} />
+        <Button title="Agregar Producto" variant="primary" onPress={() => { }} />
       </View>
       <View
         style={[
@@ -156,7 +156,7 @@ export default function PanelScreen() {
     <ScrollView contentContainerStyle={styles.tabContent}>
       <View style={styles.section}>
         <Text style={[styles.sectionTitle, { color: colors.text }]}>Configuración</Text>
-        
+
         <View
           style={[
             styles.settingItem,

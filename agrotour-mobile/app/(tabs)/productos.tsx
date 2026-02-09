@@ -3,8 +3,8 @@ import { useEffect, useState } from 'react';
 import { Ionicons } from '@expo/vector-icons';
 
 import { useDarkMode } from '@/contexts/DarkModeContext';
-import { useAuth } from '@/contexts/AuthContextV2';
-import { useCart } from '@/contexts/CartContextV2';
+import { useAuth } from '@/contexts/AuthContext';
+import { useCart } from '@/contexts/CartContext';
 import { dataService } from '@/services/DataService';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { globalErrorStore } from '@/services/GlobalErrorStore';

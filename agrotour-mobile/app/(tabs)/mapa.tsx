@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import { Ionicons } from '@expo/vector-icons';
 
 import { useDarkMode } from '@/contexts/DarkModeContext';
-import { useAuth } from '@/contexts/AuthContextV2';
+import { useAuth } from '@/contexts/AuthContext';
 import { dataService } from '@/services/DataService';
 import { globalErrorStore } from '@/services/GlobalErrorStore';
 import { Ubicacion, Productor } from '@/shared/types';
@@ -98,9 +98,9 @@ export default function MapaScreen() {
                 style={[
                   styles.producerCard,
                   { backgroundColor: colors.surface, borderColor: colors.border },
-                  selectedProducer?.id === productor.id && { 
-                    borderColor: colors.primary, 
-                    borderWidth: 2 
+                  selectedProducer?.id === productor.id && {
+                    borderColor: colors.primary,
+                    borderWidth: 2
                   },
                 ]}
                 onPress={() =>

@@ -4,8 +4,8 @@ import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 
 import { useDarkMode } from '@/contexts/DarkModeContext';
-import { useAuth } from '@/contexts/AuthContextV2';
-import { useCart } from '@/contexts/CartContextV2';
+import { useAuth } from '@/contexts/AuthContext';
+import { useCart } from '@/contexts/CartContext';
 import { dataService } from '@/services/DataService';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { globalErrorStore } from '@/services/GlobalErrorStore';
@@ -77,7 +77,7 @@ export default function HomeScreen() {
       >
         <View style={styles.quickAccessSection}>
           <Text style={[styles.sectionTitle, { color: colors.text }]}>Acceso Rápido</Text>
-          
+
           <View style={styles.quickAccessGrid}>
             <TouchableOpacity
               style={[styles.quickCard, { backgroundColor: colors.surface, borderColor: colors.border }]}

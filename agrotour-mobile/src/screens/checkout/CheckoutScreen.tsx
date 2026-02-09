@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, Alert, ActivityIndicator, TouchableOpacity } from 'react-native';
 import { useStripe } from '@stripe/stripe-react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { apiClient } from '../../services/api';
+import { apiClient } from '../../shared/api';
 import { useCart } from '../../contexts/CartContext';
 import { useAuth } from '../../contexts/AuthContext';
 
@@ -26,7 +26,7 @@ export default function CheckoutScreen() {
 
         setLoading(true);
         try {
-            const { client_secret, publishable_key } = await apiClient.createPaymentIntent(ventaId);
+            const { client_secret, publishable_key } = await apiClient.post<{ client_secret: string; publishable_key: string }>('/api/payments/create-intent/', { venta_id: ventaId });
 
             const { error } = await initPaymentSheet({
                 merchantDisplayName: "Agrotour",

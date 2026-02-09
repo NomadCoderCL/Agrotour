@@ -11,9 +11,9 @@ import {
   setupPushNotificationListener,
   unregisterFCMToken,
 } from '../services/fcm';
-import { getLogger } from '../shared/logger';
+import { logger } from '../utils/logger';
 
-const logger = getLogger('PushNotificationProvider');
+
 
 interface PushNotificationContextType {
   isReady: boolean;

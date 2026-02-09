@@ -4,7 +4,7 @@
  */
 
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { SyncOperation, SyncConflict, SyncState } from "../types/models";
+import { SyncOperation, SyncConflict, SyncState } from "../shared/types";
 
 const KEYS = {
     SYNC_OPERATIONS: "@agrotour/sync_operations",

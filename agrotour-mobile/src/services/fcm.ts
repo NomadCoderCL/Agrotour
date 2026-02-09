@@ -6,9 +6,7 @@
 import * as Notifications from 'expo-notifications';
 import { api } from '../shared/api';
 import { ENDPOINTS } from '../shared/config';
-import { getLogger } from '../shared/logger';
-
-const logger = getLogger('FCM');
+import { logger } from '../utils/logger';
 
 /**
  * Configure push notifications
@@ -33,6 +31,8 @@ export async function setupPushNotifications() {
           shouldShowAlert: true,
           shouldPlaySound: true,
           shouldSetBadge: true,
+          shouldShowBanner: true,
+          shouldShowList: true,
         };
       },
     });
@@ -98,9 +98,7 @@ export async function sendLocalNotification(title: string, body: string) {
         body,
         sound: 'default',
       },
-      trigger: {
-        seconds: 2,
-      },
+      trigger: null,
     });
     logger.debug('Local notification scheduled');
   } catch (error) {

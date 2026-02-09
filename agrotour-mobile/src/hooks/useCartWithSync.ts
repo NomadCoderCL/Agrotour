@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useCart } from '@/contexts/CartContextV2';
+import { useCart } from '@/contexts/CartContext';
 import { useSync } from '@/contexts/SyncContext';
 import { globalErrorStore } from '@/services/GlobalErrorStore';
 
@@ -28,7 +28,7 @@ export function useCartWithSync() {
   const addItemWithSync = async (product: any, quantity: number) => {
     try {
       await addItem(product, quantity);
-      
+
       const operation: CartOperation = {
         type: 'add',
         productId: product.id,
@@ -129,13 +129,13 @@ export function useCartWithSync() {
     itemCount,
     totalPrice,
     operationHistory,
-    
+
     // Operaciones con sync
     addItem: addItemWithSync,
     updateQuantity: updateQuantityWithSync,
     removeItem: removeItemWithSync,
     clearCart: clearCartWithSync,
-    
+
     // Estado de sincronización
     isSyncing,
     pendingCount,
