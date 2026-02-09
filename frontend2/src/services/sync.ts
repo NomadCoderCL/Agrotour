@@ -26,7 +26,7 @@ export interface SyncResult {
 
 export class SyncClient {
   private deviceId: string;
-  private isSync ingig = false;
+  private _isSyncing = false;
 
   constructor(deviceId: string) {
     this.deviceId = deviceId;
@@ -78,7 +78,7 @@ export class SyncClient {
    * Sincronizar operaciones pendientes
    */
   async syncPush(): Promise<SyncResult> {
-    if (this.isSyncing) {
+    if (this._isSyncing) {
       logger.warn("Sync already in progress");
       return {
         success: false,
@@ -89,7 +89,7 @@ export class SyncClient {
       };
     }
 
-    this.isSyncing = true;
+    this._isSyncing = true;
     logger.info("Starting sync push");
 
     try {
@@ -141,7 +141,7 @@ export class SyncClient {
         message: error instanceof Error ? error.message : "Unknown error",
       };
     } finally {
-      this.isSyncing = false;
+      this._isSyncing = false;
     }
   }
 
@@ -244,7 +244,7 @@ export class SyncClient {
    * Obtener estado
    */
   get isSyncing(): boolean {
-    return this.isSyncing;
+    return this._isSyncing;
   }
 }
 
