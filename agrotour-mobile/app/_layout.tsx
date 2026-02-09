@@ -28,21 +28,23 @@ function RootLayoutContent() {
 }
 
 export default function RootLayout() {
-  <StripeProvider
-    publishableKey="pk_test_51Q59wF2N3O4aV8Z6qL9iX7jR1K2m3n4o5p6q7r8s9t0" // Replace with env var later
-    merchantIdentifier="merchant.com.nomadcodercl.agrotour" // optional
-  >
-    <DarkModeProvider>
-      <AuthProvider>
-        <CartProvider>
-          <SyncProvider>
-            <PushNotificationProvider>
-              <RootLayoutContent />
-              <StatusBar style="auto" />
-            </PushNotificationProvider>
-          </SyncProvider>
-        </CartProvider>
-      </AuthProvider>
-    </DarkModeProvider>
-  </StripeProvider>
+  return (
+    <StripeProvider
+      publishableKey="pk_test_51Q59wF2N3O4aV8Z6qL9iX7jR1K2m3n4o5p6q7r8s9t0" // Replace with env var later
+      merchantIdentifier="merchant.com.nomadcodercl.agrotour" // optional
+    >
+      <DarkModeProvider>
+        <AuthProvider>
+          <CartProvider>
+            <SyncProvider>
+              <PushNotificationProvider>
+                <RootLayoutContent />
+                <StatusBar style="auto" />
+              </PushNotificationProvider>
+            </SyncProvider>
+          </CartProvider>
+        </AuthProvider>
+      </DarkModeProvider>
+    </StripeProvider>
+  );
 }

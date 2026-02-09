@@ -1,6 +1,6 @@
-import { apiClient } from './api';
+import { apiClient } from '../shared/api';
 import { localDb } from './local-db';
-import { Producto, Venta, EntityType } from '../types/models';
+import { Producto, Venta, EntityType } from '../shared/types';
 
 /**
  * Servicio de datos que maneja la lógica de "Local First" con fallback a red.
@@ -16,8 +16,7 @@ export const dataService = {
         }
 
         try {
-            const response = await apiClient.get<Producto[]>('/api/catalogo/?mobile=true');
-            const data = response.data;
+            const data = await apiClient.get<Producto[]>('/api/catalogo/?mobile=true');
             await localDb.saveData('productos', data);
             return data;
         } catch (error) {

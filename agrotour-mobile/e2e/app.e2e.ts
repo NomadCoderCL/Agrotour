@@ -21,7 +21,7 @@ describe('Agrotour App - E2E Tests', () => {
       await element(by.id('username-input')).typeText('testuser');
       await element(by.id('password-input')).typeText('password123');
       await element(by.text('Sign In')).multiTap();
-      
+
       await waitFor(element(by.text('Home')))
         .toBeVisible()
         .withTimeout(5000);
@@ -31,7 +31,7 @@ describe('Agrotour App - E2E Tests', () => {
       await element(by.id('username-input')).typeText('invalid');
       await element(by.id('password-input')).typeText('invalid');
       await element(by.text('Sign In')).multiTap();
-      
+
       await waitFor(element(by.text('Invalid credentials')))
         .toBeVisible()
         .withTimeout(5000);
@@ -71,7 +71,7 @@ describe('Agrotour App - E2E Tests', () => {
     it('should add product to cart', async () => {
       await element(by.id('product-card-0')).multiTap();
       await element(by.text('Agregar al Carrito')).tap();
-      
+
       await waitFor(element(by.text('1'))) // Cart count badge
         .toBeVisible()
         .withTimeout(5000);
@@ -87,7 +87,7 @@ describe('Agrotour App - E2E Tests', () => {
     it('should update product quantity', async () => {
       await element(by.id('quantity-input-0')).clearText();
       await element(by.id('quantity-input-0')).typeText('3');
-      
+
       await waitFor(element(by.text('3')))
         .toBeVisible()
         .withTimeout(5000);
@@ -95,7 +95,7 @@ describe('Agrotour App - E2E Tests', () => {
 
     it('should remove product from cart', async () => {
       await element(by.text('Eliminar')).atIndex(0).tap();
-      
+
       await waitFor(element(by.text('Tu carrito está vacío')))
         .toBeVisible()
         .withTimeout(5000);
@@ -119,7 +119,7 @@ describe('Agrotour App - E2E Tests', () => {
 
     it('should validate shipping form', async () => {
       await element(by.text('Finalizar Compra')).tap();
-      
+
       // Should show validation error
       await waitFor(element(by.text('Completa todos los campos')))
         .toBeVisible()
@@ -169,7 +169,7 @@ describe('Agrotour App - E2E Tests', () => {
 
     it('should logout', async () => {
       await element(by.text('Cerrar Sesión')).tap();
-      
+
       await waitFor(element(by.text('Login')))
         .toBeVisible()
         .withTimeout(5000);
@@ -179,7 +179,7 @@ describe('Agrotour App - E2E Tests', () => {
   describe('Offline Mode', () => {
     it('should show offline indicator when disconnected', async () => {
       await device.setAirplaneMode(true);
-      
+
       await waitFor(element(by.text('Modo Offline')))
         .toBeVisible()
         .withTimeout(5000);
@@ -187,7 +187,7 @@ describe('Agrotour App - E2E Tests', () => {
 
     it('should restore online indicator when reconnected', async () => {
       await device.setAirplaneMode(false);
-      
+
       await waitFor(element(by.text('Modo Offline')))
         .not.toBeVisible()
         .withTimeout(10000);
@@ -197,7 +197,7 @@ describe('Agrotour App - E2E Tests', () => {
   describe('Dark Mode', () => {
     it('should toggle dark mode', async () => {
       await element(by.id('dark-mode-toggle')).tap();
-      
+
       // Verify dark mode is active (check background color or theme)
       await expect(element(by.id('app-container'))).toHaveToggleValue(true);
     });
@@ -214,7 +214,7 @@ describe('Agrotour App - E2E Tests', () => {
       // Simulate slow network (2000ms delay)
       // Note: Detox doesn't natively support network throttling,
       // so backend must be configured for testing with delays
-      
+
       // Navigate to productos tab
       await element(by.id('tab-productos')).tap();
 
@@ -260,7 +260,7 @@ describe('Agrotour App - E2E Tests', () => {
     it('should handle API contract mismatch gracefully (400 error)', async () => {
       // This test simulates a response from backend that doesn't match expected schema
       // The app should show an error toast \"Update Required\" but NOT crash
-      
+
       // Try to add product to cart with mismatched response
       await element(by.id('add-to-cart-button').and(by.text('Producto 1'))).tap();
 
@@ -334,3 +334,4 @@ describe('Agrotour App - E2E Tests', () => {
       await expect(element(by.text('Home'))).toBeVisible();
     });
   });
+});

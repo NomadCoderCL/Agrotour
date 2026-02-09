@@ -54,7 +54,7 @@ export const CheckoutPage: React.FC = () => {
   const itemsCount = carro.reduce((sum, item) => sum + item.cantidad, 0);
 
   // Validate checkout
-  const isFormValid = 
+  const isFormValid =
     shippingInfo.fullName &&
     shippingInfo.phone &&
     shippingInfo.address &&
@@ -132,8 +132,8 @@ export const CheckoutPage: React.FC = () => {
         // 5. Show success message
         setSuccess(true);
         setTimeout(() => {
-          navigate('/cliente-panel/historial-compras', { 
-            state: { message: 'Compra realizada exitosamente!' } 
+          navigate('/cliente-panel/historial-compras', {
+            state: { message: 'Compra realizada exitosamente!' }
           });
         }, 2000);
       } else {
@@ -340,8 +340,8 @@ export const CheckoutPage: React.FC = () => {
             >
               Continuar Comprando
             </button>
-          </aside>
-        </div>
+          </div>
+        </aside>
       </div>
     </div>
   );

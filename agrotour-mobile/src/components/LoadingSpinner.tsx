@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, ActivityIndicator, Text, StyleSheet, Animated } from 'react-native';
-import { useColorScheme } from '@react-native-community/hooks';
+import { View, ActivityIndicator, Text, StyleSheet, Animated, useColorScheme } from 'react-native';
 
 interface LoadingSpinnerProps {
   visible: boolean;

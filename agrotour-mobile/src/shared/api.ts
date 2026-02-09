@@ -10,7 +10,7 @@ import axios, {
   AxiosResponse,
 } from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { API_BASE_URL, STORAGE_KEYS, REQUEST_TIMEOUT, TOKEN_REFRESH_BUFFER } from './config';
+import { API_BASE_URL, STORAGE_KEYS, REQUEST_TIMEOUT, TOKEN_REFRESH_BUFFER, ENDPOINTS } from './config';
 import { APIException, APIError } from './types';
 import { globalErrorStore } from '../services/GlobalErrorStore';
 
@@ -250,41 +250,6 @@ class APIClient {
     }
   }
 
-  /**
-   * POST request - Generic (for custom endpoints)
-   */
-  async post<T = any>(url: string, data: any, config?: any): Promise<T> {
-    try {
-      const response = await this.client.post<T>(url, data, config);
-      return response.data;
-    } catch (error) {
-      throw this.handleError(error);
-    }
-  }
-
-  /**
-   * PUT request - Generic
-   */
-  async put<T = any>(url: string, data: any, config?: any): Promise<T> {
-    try {
-      const response = await this.client.put<T>(url, data, config);
-      return response.data;
-    } catch (error) {
-      throw this.handleError(error);
-    }
-  }
-
-  /**
-   * DELETE request - Generic
-   */
-  async delete<T = any>(url: string, config?: any): Promise<T> {
-    try {
-      const response = await this.client.delete<T>(url, config);
-      return response.data;
-    } catch (error) {
-      throw this.handleError(error);
-    }
-  }
 }
 
 // Singleton instance

@@ -1,1 +1,115 @@
-import React, { useEffect, useState } from 'react';\nimport { View, Text, StyleSheet, Animated } from 'react-native';\nimport { globalErrorStore, GlobalError } from '../services/GlobalErrorStore';\n\n/**\n * Error Toast - Lightweight notification for API errors\n * Shows errors without blocking the UI like ErrorBoundary\n */\nexport function ErrorToast() {\n  const [error, setError] = useState<GlobalError | null>(null);\n  const [visible, setVisible] = useState(false);\n  const slideAnim = new Animated.Value(-100);\n\n  useEffect(() => {\n    const unsubscribe = globalErrorStore.subscribe((err) => {\n      if (err) {\n        setError(err);\n        setVisible(true);\n        slideIn();\n        // Auto-hide after 5 seconds\n        setTimeout(() => {\n          slideOut();\n        }, 5000);\n      } else {\n        slideOut();\n      }\n    });\n\n    return () => unsubscribe();\n  }, []);\n\n  const slideIn = () => {\n    Animated.timing(slideAnim, {\n      toValue: 0,\n      duration: 300,\n      useNativeDriver: true,\n    }).start();\n  };\n\n  const slideOut = () => {\n    Animated.timing(slideAnim, {\n      toValue: -100,\n      duration: 300,\n      useNativeDriver: true,\n    }).start(() => {\n      setVisible(false);\n      globalErrorStore.clearError();\n    });\n  };\n\n  if (!visible || !error) return null;\n\n  const errorColors: Record<string, { bg: string; text: string; icon: string }> = {\n    CONTRACT_MISMATCH: { bg: '#ffebee', text: '#c62828', icon: '📱' },\n    SERVER_ERROR: { bg: '#fff3e0', text: '#e65100', icon: '⚠️' },\n    NETWORK_ERROR: { bg: '#e3f2fd', text: '#1565c0', icon: '📡' },\n    TIMEOUT: { bg: '#f3e5f5', text: '#6a1b9a', icon: '⏱️' },\n    NONE: { bg: '#f5f5f5', text: '#424242', icon: 'ℹ️' },\n  };\n\n  const colors = errorColors[error.type] || errorColors.NONE;\n\n  return (\n    <Animated.View\n      style={[\n        styles.container,\n        { transform: [{ translateY: slideAnim }] },\n        { backgroundColor: colors.bg },\n      ]}\n    >\n      <Text style={styles.icon}>{colors.icon}</Text>\n      <View style={styles.content}>\n        <Text style={[styles.type, { color: colors.text }]}>{error.type}</Text>\n        <Text style={[styles.message, { color: colors.text }]} numberOfLines={2}>\n          {error.message}\n        </Text>\n      </View>\n    </Animated.View>\n  );\n}\n\nconst styles = StyleSheet.create({\n  container: {\n    position: 'absolute',\n    top: 0,\n    left: 0,\n    right: 0,\n    flexDirection: 'row',\n    alignItems: 'center',\n    paddingHorizontal: 12,\n    paddingVertical: 10,\n    zIndex: 999,\n    shadowColor: '#000',\n    shadowOffset: { width: 0, height: 2 },\n    shadowOpacity: 0.25,\n    shadowRadius: 3.84,\n    elevation: 5,\n  },\n  icon: {\n    fontSize: 20,\n    marginRight: 10,\n  },\n  content: {\n    flex: 1,\n  },\n  type: {\n    fontSize: 12,\n    fontWeight: '700',\n    marginBottom: 2,\n  },\n  message: {\n    fontSize: 12,\n    lineHeight: 16,\n  },\n});\n
+import React, { useEffect, useState } from 'react';
+import { View, Text, StyleSheet, Animated } from 'react-native';
+import { globalErrorStore, GlobalError } from '../services/GlobalErrorStore';
+
+/**
+ * Error Toast - Lightweight notification for API errors
+ * Shows errors without blocking the UI like ErrorBoundary
+ */
+export function ErrorToast() {
+    const [error, setError] = useState<GlobalError | null>(null);
+    const [visible, setVisible] = useState(false);
+    const slideAnim = new Animated.Value(-100);
+
+    useEffect(() => {
+        const unsubscribe = globalErrorStore.subscribe((err) => {
+            if (err) {
+                setError(err);
+                setVisible(true);
+                slideIn();
+                // Auto-hide after 5 seconds
+                setTimeout(() => {
+                    slideOut();
+                }, 5000);
+            } else {
+                slideOut();
+            }
+        });
+
+        return () => unsubscribe();
+    }, []);
+
+    const slideIn = () => {
+        Animated.timing(slideAnim, {
+            toValue: 0,
+            duration: 300,
+            useNativeDriver: true,
+        }).start();
+    };
+
+    const slideOut = () => {
+        Animated.timing(slideAnim, {
+            toValue: -100,
+            duration: 300,
+            useNativeDriver: true,
+        }).start(() => {
+            setVisible(false);
+            globalErrorStore.clearError();
+        });
+    };
+
+    if (!visible || !error) return null;
+
+    const errorColors: Record<string, { bg: string; text: string; icon: string }> = {
+        CONTRACT_MISMATCH: { bg: '#ffebee', text: '#c62828', icon: '📱' },
+        SERVER_ERROR: { bg: '#fff3e0', text: '#e65100', icon: '⚠️' },
+        NETWORK_ERROR: { bg: '#e3f2fd', text: '#1565c0', icon: '📡' },
+        TIMEOUT: { bg: '#f3e5f5', text: '#6a1b9a', icon: '⏱️' },
+        NONE: { bg: '#f5f5f5', text: '#424242', icon: 'ℹ️' },
+    };
+
+    const colors = errorColors[error.type] || errorColors.NONE;
+
+    return (
+        <Animated.View
+            style={[
+                styles.container,
+                { transform: [{ translateY: slideAnim }] },
+                { backgroundColor: colors.bg },
+            ]}
+        >
+            <Text style={styles.icon}>{colors.icon}</Text>
+            <View style={styles.content}>
+                <Text style={[styles.type, { color: colors.text }]}>{error.type}</Text>
+                <Text style={[styles.message, { color: colors.text }]} numberOfLines={2}>
+                    {error.message}
+                </Text>
+            </View>
+        </Animated.View>
+    );
+}
+
+const styles = StyleSheet.create({
+    container: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingHorizontal: 12,
+        paddingVertical: 10,
+        zIndex: 999,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.25,
+        shadowRadius: 3.84,
+        elevation: 5,
+    },
+    icon: {
+        fontSize: 20,
+        marginRight: 10,
+    },
+    content: {
+        flex: 1,
+    },
+    type: {
+        fontSize: 12,
+        fontWeight: '700',
+        marginBottom: 2,
+    },
+    message: {
+        fontSize: 12,
+        lineHeight: 16,
+    },
+});

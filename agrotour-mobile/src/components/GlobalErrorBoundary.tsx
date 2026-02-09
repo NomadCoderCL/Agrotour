@@ -1,1 +1,193 @@
-import React from 'react';\nimport { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';\nimport { globalErrorStore, GlobalError } from '../services/GlobalErrorStore';\n\ninterface Props {\n  children: React.ReactNode;\n}\n\ninterface State {\n  error: GlobalError | null;\n  errorCount: number;\n}\n\n/**\n * Global Error Boundary for catching and displaying API errors\n * Prevents app crashes on 400/500 errors and allows retry\n */\nexport class GlobalErrorBoundary extends React.Component<Props, State> {\n  private unsubscribe: (() => void) | null = null;\n\n  constructor(props: Props) {\n    super(props);\n    this.state = {\n      error: null,\n      errorCount: 0,\n    };\n  }\n\n  componentDidMount() {\n    // Subscribe to global error store\n    this.unsubscribe = globalErrorStore.subscribe((error) => {\n      this.setState({\n        error,\n        errorCount: error ? this.state.errorCount + 1 : 0,\n      });\n    });\n  }\n\n  componentWillUnmount() {\n    if (this.unsubscribe) {\n      this.unsubscribe();\n    }\n  }\n\n  handleRetry = () => {\n    globalErrorStore.clearError();\n    // The parent component will handle the retry logic\n  };\n\n  handleDismiss = () => {\n    globalErrorStore.clearError();\n  };\n\n  render() {\n    const { error } = this.state;\n    const { children } = this.props;\n\n    if (!error) {\n      return children;\n    }\n\n    return (\n      <View style={styles.container}>\n        {/* Render children behind error overlay */}\n        <View style={{ flex: 1 }}>{children}</View>\n\n        {/* Error overlay */}\n        <View style={styles.errorOverlay}>\n          <ScrollView style={styles.errorContainer} contentContainerStyle={styles.errorContent}>\n            {/* Error icon/badge */}\n            <View style={styles.errorIconContainer}>\n              <Text style={styles.errorIcon}>⚠️</Text>\n            </View>\n\n            {/* Error type */}\n            <Text style={styles.errorType}>{error.type}</Text>\n\n            {/* Error message */}\n            <Text style={styles.errorMessage}>{error.message}</Text>\n\n            {/* Error details (if available) */}\n            {error.details && (\n              <View style={styles.detailsContainer}>\n                <Text style={styles.detailsLabel}>Detalles técnicos:</Text>\n                <Text style={styles.detailsText}>\n                  {JSON.stringify(error.details, null, 2)}\n                </Text>\n              </View>\n            );\n\n            {/* Action buttons */}\n            <View style={styles.actionButtons}>\n              {error.retry && (\n                <TouchableOpacity\n                  style={[styles.button, styles.retryButton]}\n                  onPress={this.handleRetry}\n                >\n                  <Text style={styles.buttonText}>Reintentar</Text>\n                </TouchableOpacity>\n              )}\n              <TouchableOpacity\n                style={[styles.button, styles.dismissButton]}\n                onPress={this.handleDismiss}\n              >\n                <Text style={styles.buttonText}>Descartar</Text>\n              </TouchableOpacity>\n            </View>\n          </ScrollView>\n        </View>\n      </View>\n    );\n  }\n}\n\nconst styles = StyleSheet.create({\n  container: {\n    flex: 1,\n    backgroundColor: '#fff',\n  },\n  errorOverlay: {\n    ...StyleSheet.absoluteFillObject,\n    backgroundColor: 'rgba(0, 0, 0, 0.5)',\n    justifyContent: 'flex-end',\n  },\n  errorContainer: {\n    maxHeight: '70%',\n    backgroundColor: '#fff',\n    borderTopLeftRadius: 16,\n    borderTopRightRadius: 16,\n  },\n  errorContent: {\n    padding: 20,\n  },\n  errorIconContainer: {\n    alignItems: 'center',\n    marginBottom: 12,\n  },\n  errorIcon: {\n    fontSize: 40,\n  },\n  errorType: {\n    fontSize: 16,\n    fontWeight: '600',\n    color: '#d32f2f',\n    textAlign: 'center',\n    marginBottom: 8,\n  },\n  errorMessage: {\n    fontSize: 14,\n    color: '#424242',\n    textAlign: 'center',\n    marginBottom: 16,\n    lineHeight: 20,\n  },\n  detailsContainer: {\n    backgroundColor: '#f5f5f5',\n    borderRadius: 8,\n    padding: 12,\n    marginBottom: 16,\n  },\n  detailsLabel: {\n    fontSize: 12,\n    fontWeight: '600',\n    color: '#666',\n    marginBottom: 8,\n  },\n  detailsText: {\n    fontSize: 11,\n    color: '#999',\n    fontFamily: 'monospace',\n  },\n  actionButtons: {\n    flexDirection: 'row',\n    gap: 8,\n  },\n  button: {\n    flex: 1,\n    paddingVertical: 12,\n    borderRadius: 8,\n    alignItems: 'center',\n  },\n  retryButton: {\n    backgroundColor: '#4caf50',\n  },\n  dismissButton: {\n    backgroundColor: '#9e9e9e',\n  },\n  buttonText: {\n    color: '#fff',\n    fontWeight: '600',\n    fontSize: 14,\n  },\n});\n
+import React from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import { globalErrorStore, GlobalError } from '../services/GlobalErrorStore';
+
+interface Props {
+    children: React.ReactNode;
+}
+
+interface State {
+    error: GlobalError | null;
+    errorCount: number;
+}
+
+/**
+ * Global Error Boundary for catching and displaying API errors
+ * Prevents app crashes on 400/500 errors and allows retry
+ */
+export class GlobalErrorBoundary extends React.Component<Props, State> {
+    private unsubscribe: (() => void) | null = null;
+
+    constructor(props: Props) {
+        super(props);
+        this.state = {
+            error: null,
+            errorCount: 0,
+        };
+    }
+
+    componentDidMount() {
+        // Subscribe to global error store
+        this.unsubscribe = globalErrorStore.subscribe((error) => {
+            this.setState({
+                error,
+                errorCount: error ? this.state.errorCount + 1 : 0,
+            });
+        });
+    }
+
+    componentWillUnmount() {
+        if (this.unsubscribe) {
+            this.unsubscribe();
+        }
+    }
+
+    handleRetry = () => {
+        globalErrorStore.clearError();
+        // The parent component will handle the retry logic
+    };
+
+    handleDismiss = () => {
+        globalErrorStore.clearError();
+    };
+
+    render() {
+        const { error } = this.state;
+        const { children } = this.props;
+
+        if (!error) {
+            return children;
+        }
+
+        return (
+            <View style={styles.container}>
+                {/* Render children behind error overlay */}
+                <View style={{ flex: 1 }}>{children}</View>
+
+                {/* Error overlay */}
+                <View style={styles.errorOverlay}>
+                    <ScrollView style={styles.errorContainer} contentContainerStyle={styles.errorContent}>
+                        {/* Error icon/badge */}
+                        <View style={styles.errorIconContainer}>
+                            <Text style={styles.errorIcon}>⚠️</Text>
+                        </View>
+
+                        {/* Error type */}
+                        <Text style={styles.errorType}>{error.type}</Text>
+
+                        {/* Error message */}
+                        <Text style={styles.errorMessage}>{error.message}</Text>
+
+                        {/* Error details (if available) */}
+                        {error.details && (
+                            <View style={styles.detailsContainer}>
+                                <Text style={styles.detailsLabel}>Detalles técnicos:</Text>
+                                <Text style={styles.detailsText}>
+                                    {JSON.stringify(error.details, null, 2)}
+                                </Text>
+                            </View>
+                        )}
+
+                        {/* Action buttons */}
+                        <View style={styles.actionButtons}>
+                            {error.retry && (
+                                <TouchableOpacity
+                                    style={[styles.button, styles.retryButton]}
+                                    onPress={this.handleRetry}
+                                >
+                                    <Text style={styles.buttonText}>Reintentar</Text>
+                                </TouchableOpacity>
+                            )}
+                            <TouchableOpacity
+                                style={[styles.button, styles.dismissButton]}
+                                onPress={this.handleDismiss}
+                            >
+                                <Text style={styles.buttonText}>Descartar</Text>
+                            </TouchableOpacity>
+                        </View>
+                    </ScrollView>
+                </View>
+            </View>
+        );
+    }
+}
+
+const styles = StyleSheet.create({
+    container: {
+        flex: 1,
+        backgroundColor: '#fff',
+    },
+    errorOverlay: {
+        ...StyleSheet.absoluteFillObject,
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        justifyContent: 'flex-end',
+    },
+    errorContainer: {
+        maxHeight: '70%',
+        backgroundColor: '#fff',
+        borderTopLeftRadius: 16,
+        borderTopRightRadius: 16,
+    },
+    errorContent: {
+        padding: 20,
+    },
+    errorIconContainer: {
+        alignItems: 'center',
+        marginBottom: 12,
+    },
+    errorIcon: {
+        fontSize: 40,
+    },
+    errorType: {
+        fontSize: 16,
+        fontWeight: '600',
+        color: '#d32f2f',
+        textAlign: 'center',
+        marginBottom: 8,
+    },
+    errorMessage: {
+        fontSize: 14,
+        color: '#424242',
+        textAlign: 'center',
+        marginBottom: 16,
+        lineHeight: 20,
+    },
+    detailsContainer: {
+        backgroundColor: '#f5f5f5',
+        borderRadius: 8,
+        padding: 12,
+        marginBottom: 16,
+    },
+    detailsLabel: {
+        fontSize: 12,
+        fontWeight: '600',
+        color: '#666',
+        marginBottom: 8,
+    },
+    detailsText: {
+        fontSize: 11,
+        color: '#999',
+        fontFamily: 'monospace',
+    },
+    actionButtons: {
+        flexDirection: 'row',
+        gap: 8,
+    },
+    button: {
+        flex: 1,
+        paddingVertical: 12,
+        borderRadius: 8,
+        alignItems: 'center',
+    },
+    retryButton: {
+        backgroundColor: '#4caf50',
+    },
+    dismissButton: {
+        backgroundColor: '#9e9e9e',
+    },
+    buttonText: {
+        color: '#fff',
+        fontWeight: '600',
+        fontSize: 14,
+    },
+});

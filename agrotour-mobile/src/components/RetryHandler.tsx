@@ -6,8 +6,8 @@ import {
   StyleSheet,
   ActivityIndicator,
   Animated,
+  useColorScheme,
 } from 'react-native';
-import { useColorScheme } from '@react-native-community/hooks';
 
 export interface RetryConfig {
   onRetry: () => Promise<void>;
