@@ -19,6 +19,7 @@ export interface Usuario {
   telefono?: string;
   first_name?: string;
   last_name?: string;
+  nombre?: string;
   is_active: boolean;
 }
 
@@ -37,6 +38,7 @@ export interface Producto {
   descripcion: string;
   precio: number;
   cantidad: number;
+  stock: number;
   categoria_id?: number;
   productor_id: number;
   metodo_venta: MetodoVenta;
@@ -102,6 +104,8 @@ export interface Productor {
   nombre?: string;
   descripcion?: string;
   ubicaciones?: Ubicacion[];
+  ubicacion?: Ubicacion;
+  usuario?: Usuario;
 }
 
 // ===== VISITAS GUIADAS =====

@@ -136,7 +136,7 @@ export default function MapaScreen() {
                             { color: colors.textSecondary },
                           ]}
                         >
-                          {productor.ubicacion.ciudad || 'Ubicación no definida'}
+                          {productor.ubicacion.direccion || 'Ubicación no definida'}
                         </Text>
                       </View>
                     )}

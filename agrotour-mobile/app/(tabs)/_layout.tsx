@@ -64,7 +64,7 @@ export default function TabLayout() {
           headerTitle: 'Explorar Productos',
           tabBarIcon: ({ color, focused }) => (
             <MaterialCommunityIcons
-              name={focused ? 'leaf' : 'leaf-outline'}
+              name={focused ? 'leaf' : 'leaf'}
               color={color}
               size={24}
             />

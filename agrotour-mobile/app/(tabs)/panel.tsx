@@ -5,6 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useDarkMode } from '@/contexts/DarkModeContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { globalErrorStore } from '@/services/GlobalErrorStore';
+import { Button } from '@/components/UI';
 
 export default function PanelScreen() {
   const { colors } = useDarkMode();
@@ -124,7 +125,7 @@ export default function PanelScreen() {
             { backgroundColor: colors.surface, borderColor: colors.border },
           ]}
         >
-          <Ionicons name="box-outline" size={48} color={colors.textSecondary} />
+          <Ionicons name="cube-outline" size={48} color={colors.textSecondary} />
           <Text style={[styles.emptySectionText, { color: colors.textSecondary }]}>
             No hay órdenes registradas
           </Text>

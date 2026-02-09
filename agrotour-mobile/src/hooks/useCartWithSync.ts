@@ -15,7 +15,9 @@ export interface CartOperation {
  * Mantiene un registro de operaciones para sincronizar después
  */
 export function useCartWithSync() {
-  const { addItem, updateQuantity, removeItem, clearCart, items, itemCount, totalPrice } = useCart();
+  const { addItem, updateQuantity, removeItem, clearCart, items } = useCart();
+  const itemCount = items.reduce((count: number, item: any) => count + (item.cantidad || 0), 0);
+  const totalPrice = items.reduce((sum: number, item: any) => sum + ((item.precio || 0) * (item.cantidad || 0)), 0);
   const { addSyncOperation, isSyncing, pendingCount } = useSync();
   const [operationHistory, setOperationHistory] = useState<CartOperation[]>([]);
 
@@ -147,7 +149,8 @@ export function useCartWithSync() {
  * Hook para validar estado del carrito antes de checkout
  */
 export function useCartValidation() {
-  const { items, totalPrice } = useCart();
+  const { items } = useCart();
+  const totalPrice = items.reduce((sum: number, item: any) => sum + ((item.precio || 0) * (item.cantidad || 0)), 0);
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
 
   const validate = (): boolean => {

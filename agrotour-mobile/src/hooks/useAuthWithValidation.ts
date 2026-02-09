@@ -13,13 +13,13 @@ export function useAuthWithValidation() {
   // Validar token localmente
   const validateToken = useCallback(async () => {
     try {
-      if (!auth.user || !auth.tokens?.access) {
+      if (!auth.user || !auth.token) {
         setIsTokenValid(false);
         return false;
       }
 
       // Decodificar JWT (simple check sin validación de firma)
-      const parts = auth.tokens.access.split('.');
+      const parts = auth.token.split('.');
       if (parts.length !== 3) {
         setIsTokenValid(false);
         return false;
@@ -46,7 +46,7 @@ export function useAuthWithValidation() {
       setIsTokenValid(false);
       return false;
     }
-  }, [auth.user, auth.tokens?.access]);
+  }, [auth.user, auth.token]);
 
   // Auto-refresh token si está por expirar
   useEffect(() => {
@@ -64,7 +64,8 @@ export function useAuthWithValidation() {
         if (timeSinceLastRefresh > 1000) {
           try {
             console.log('[useAuthWithValidation] Token expired, refreshing...');
-            await auth.refreshToken();
+            // Token expired — logout since we can't refresh inline
+            await auth.logout();
             setLastRefreshTime(now);
             setIsTokenValid(true);
           } catch (err) {

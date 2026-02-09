@@ -19,7 +19,7 @@ export function useGlobalError() {
   useEffect(() => {
     // Suscribirse a cambios del error store
     const unsubscribe = globalErrorStore.subscribe((error) => {
-      if (error.type !== 'NONE') {
+      if (error && error.type !== 'NONE') {
         setCurrentError({
           type: error.type,
           message: error.message,
@@ -229,7 +229,7 @@ export function useErrorTracking() {
 
   useEffect(() => {
     const unsubscribe = globalErrorStore.subscribe((error) => {
-      if (error.type !== 'NONE') {
+      if (error && error.type !== 'NONE') {
         setErrorHistory((prev) => [
           {
             type: error.type,

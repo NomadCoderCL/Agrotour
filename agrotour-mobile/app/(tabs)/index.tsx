@@ -7,8 +7,9 @@ import { useDarkMode } from '@/contexts/DarkModeContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCart } from '@/contexts/CartContext';
 import { dataService } from '@/services/DataService';
-import { LoadingSpinner } from '@/components/LoadingSpinner';
+import { LoadingSpinner, ErrorMessage } from '@/components/UI';
 import { globalErrorStore } from '@/services/GlobalErrorStore';
+import { Producto } from '@/shared/types';
 
 export default function HomeScreen() {
   const { colors } = useDarkMode();

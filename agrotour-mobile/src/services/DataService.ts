@@ -2,6 +2,10 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { apiClient } from '../shared/api';
 import { Producto, Productor } from '../shared/types';
 
+// English type aliases for convenience
+export type Product = Producto;
+export type Producer = Productor;
+
 // Interface interna para lo que viene de la API (precio string)
 interface ApiProduct extends Omit<Producto, 'precio'> {
   precio: string | number;

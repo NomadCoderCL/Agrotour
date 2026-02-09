@@ -6,7 +6,6 @@
 
 import { apiClient } from '@/shared/api';
 import { API_TIMEOUTS } from '@/shared/constants';
-import { getSqliteDB } from '@/services/SqliteDB';
 
 // ===== TYPE DEFINITIONS =====
 

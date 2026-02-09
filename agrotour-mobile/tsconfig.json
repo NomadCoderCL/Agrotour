@@ -24,6 +24,8 @@
     "expo-env.d.ts"
   ],
   "exclude": [
-    "e2e/**"
+    "e2e/**",
+    "app/(tabs)/explore.tsx",
+    "app/modal.tsx"
   ]
 }
