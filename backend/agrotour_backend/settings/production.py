@@ -42,14 +42,13 @@ CORS_ALLOW_CREDENTIALS = True
 
 # Orígenes permitidos exactos
 CORS_ALLOWED_ORIGINS = [
-    "https://agrotour.vercel.app",  # Producción principal
-    "http://localhost:5173",         # Desarrollo Vite
-    "http://localhost:3000",         # Desarrollo alternativo
+    "https://agrotour.vercel.app",
+    "http://localhost:5173",
 ]
 
 # Regex para permitir subdominios de Vercel de este proyecto (Preview URLs)
 CORS_ALLOWED_ORIGIN_REGEXES = [
-    r"^https://.*\.vercel\.app$",  # Permite todos los subdominios de Vercel
+    r"^https://.*\.vercel\.app$",  # ← ESTO es clave
 ]
 
 # Métodos HTTP permitidos
@@ -65,24 +64,12 @@ CORS_ALLOW_METHODS = [
 # Headers permitidos en requests
 CORS_ALLOW_HEADERS = [
     "accept",
-    "accept-encoding",
     "authorization",
     "content-type",
-    "dnt",
-    "origin",
     "user-agent",
     "x-csrftoken",
     "x-requested-with",
 ]
-
-# Exponer headers adicionales al frontend
-CORS_EXPOSE_HEADERS = [
-    "Content-Type",
-    "X-CSRFToken",
-]
-
-# Tiempo de cache para preflight requests (OPTIONS)
-CORS_PREFLIGHT_MAX_AGE = 86400  # 24 horas
 
 # ============================================
 # CSRF CONFIGURATION
@@ -91,7 +78,6 @@ CORS_PREFLIGHT_MAX_AGE = 86400  # 24 horas
 CSRF_TRUSTED_ORIGINS = [
     "https://agrotour.vercel.app",
     "https://*.vercel.app",
-    "https://*.onrender.com",
 ]
 
 # Configuración para Cross-Origin Cookies (Vital para auth)
