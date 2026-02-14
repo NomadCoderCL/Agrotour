@@ -52,8 +52,8 @@ ENABLE_CORS_PREVIEW = os.environ.get('ENABLE_CORS_PREVIEW', 'false').lower() == 
 
 if ENABLE_CORS_PREVIEW:
     CORS_ALLOWED_ORIGIN_REGEXES = [
-        # Permite previews con o sin sufijo de proyecto
-        r"^https://agrotour-[a-z0-9]+(?:-nomadcodercls-projects)?\.vercel\.app$",
+        # Permite previews especificos de nomadcodercls-projects
+        r"^https://agrotour-[a-z0-9]+-nomadcodercls-projects\.vercel\.app$",
     ]
 else:
     CORS_ALLOWED_ORIGIN_REGEXES = []
