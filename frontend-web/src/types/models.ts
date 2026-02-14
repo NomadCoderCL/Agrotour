@@ -158,6 +158,11 @@ export interface SyncPushResponse {
         operation_id: string;
         reason: string;
         suggested_resolution?: SyncOperation; // Servidor propone resolución
+        // Campos extendidos para manejo de conflictos
+        conflict_id?: string;
+        conflicting_operation_id?: string;
+        conflict_type?: string;
+        resolution_level?: string;
     }>;
     new_lamport_ts: number;
     new_version: number;
@@ -181,13 +186,28 @@ export interface SyncPullResponse {
 
 // ===== SYNC CONFLICT RESOLUTION =====
 export interface SyncConflict {
+    id?: string | number; // ID local en IndexedDB o ID del conflicto del servidor
     operation_id: string;
-    entity_type: EntityType;
-    entity_id: string;
-    local_version: SyncOperation;
-    server_version: SyncOperation;
-    resolution_strategy: 'LWW' | 'MANUAL' | 'MERGE';
+    entity_type?: EntityType;
+    entity_id?: string;
+
+    // Detalles del conflicto
+    conflicting_operation_id?: string;
+    conflict_type?: string;
+    resolution_level?: string;
+
+    // Estado
+    resolved: boolean;
+    created_at?: string;
     resolved_at?: string;
+
+    // Datos de versiones para resolución
+    local_version?: SyncOperation;
+    server_version?: SyncOperation;
+    resolution_strategy?: 'LWW' | 'MANUAL' | 'MERGE';
+
+    // Compatibilidad con esquema DB anterior
+    conflict_id?: string;
 }
 
 // ===== PUSH NOTIFICATIONS =====
