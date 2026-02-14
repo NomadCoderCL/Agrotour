@@ -44,3 +44,5 @@ sqlparse
 tzdata
 uritemplate
 psycopg2-binary
+whitenoise
+dj-database-url

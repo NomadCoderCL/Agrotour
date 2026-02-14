@@ -30,9 +30,19 @@ if SENTRY_DSN:
 # Static Files serving with WhiteNoise (as fallback)
 MIDDLEWARE.insert(1, 'whitenoise.middleware.WhiteNoiseMiddleware')
 
+# ALLOWED_HOSTS
+ALLOWED_HOSTS = ['*']
+
 # CORS
-# CORS_ALLOWED_ORIGINS should be set via env in base.py or here if complex
-# CORS_REPLACE_HTTPS_REFERER = True  # Removed: Deprecated in modern django-cors-headers
+CORS_ALLOW_ALL_ORIGINS = True
+# If you want to be specific:
+# CORS_ALLOWED_ORIGINS = ["https://agrotour.vercel.app"]
+
+# CSRF
+CSRF_TRUSTED_ORIGINS = ['https://*.onrender.com']
+
+# Database
+# Uses env.db() from base.py, so ensure DATABASE_URL is set in Render
 
 # Silenced Warnings
 # W001: SecurityMiddleware is present (verified), but 'insert' confuses the check.

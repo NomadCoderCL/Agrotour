@@ -37,7 +37,7 @@ class ApiClient {
   private retryConfig: RetryConfig;
 
   constructor(baseURL?: string, retryConfig?: Partial<RetryConfig>) {
-    const API_BASE_URL = baseURL || import.meta.env.REACT_APP_API_URL || "http://localhost:8000";
+    const API_BASE_URL = baseURL || import.meta.env.VITE_API_URL || "http://localhost:8000";
 
     this.axiosInstance = axios.create({
       baseURL: API_BASE_URL,
