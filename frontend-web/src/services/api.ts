@@ -41,7 +41,11 @@ class ApiClient {
 
   constructor(baseURL?: string, retryConfig?: Partial<RetryConfig>) {
     // Vite usa import.meta.env, asegúrate de tener VITE_API_URL en tu .env
-    const API_BASE_URL = baseURL || import.meta.env.VITE_API_URL || "http://localhost:8000";
+    let API_BASE_URL = baseURL || import.meta.env.VITE_API_URL || "http://localhost:8000";
+
+    // Sanitize: Remove trailing slash and any accidental port/junk like :1
+    // Si la URL termina en :1 (error común de copy-paste en Vercel envs), lo quitamos.
+    API_BASE_URL = API_BASE_URL.replace(/\/$/, "").replace(/:1$/, "");
 
     this.axiosInstance = axios.create({
       baseURL: API_BASE_URL,
