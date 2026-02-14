@@ -34,12 +34,17 @@ MIDDLEWARE.insert(1, 'whitenoise.middleware.WhiteNoiseMiddleware')
 ALLOWED_HOSTS = ['*']
 
 # CORS
+# CORS
 CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOW_CREDENTIALS = True
 # If you want to be specific:
 # CORS_ALLOWED_ORIGINS = ["https://agrotour.vercel.app"]
 
 # CSRF
-CSRF_TRUSTED_ORIGINS = ['https://*.onrender.com']
+CSRF_TRUSTED_ORIGINS = [
+    'https://*.onrender.com',
+    'https://agrotour.vercel.app'
+]
 
 # Database
 # Uses env.db() from base.py, so ensure DATABASE_URL is set in Render
