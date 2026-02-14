@@ -62,7 +62,22 @@ const LoginPage: React.FC = () => {
         }
       }
     } catch (err: any) {
-      setError(err?.response?.data?.error || err?.message || 'Credenciales inválidas o error del servidor.');
+      console.error('Login error:', err);
+      if (err.code === 'ERR_NETWORK') {
+        setError('Error de conexión. Verifica tu internet o que el servidor esté activo.');
+      } else if (err.response?.status === 401 || err.response?.status === 400) {
+        // dj-rest-auth suele devolver errores en non_field_errors
+        const data = err.response.data;
+        if (data?.non_field_errors && Array.isArray(data.non_field_errors)) {
+          setError(data.non_field_errors[0]);
+        } else {
+          setError('Credenciales incorrectas. Verifica tu usuario y contraseña.');
+        }
+      } else if (err.response?.status >= 500) {
+        setError('Error interno del servidor. Inténtalo más tarde.');
+      } else {
+        setError(err?.message || 'Ocurrió un error inesperado al iniciar sesión.');
+      }
     }
   };
 

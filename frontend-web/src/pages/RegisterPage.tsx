@@ -66,7 +66,30 @@ const RegisterPage: React.FC = () => {
         navigate(getRolRedirect(tipoUsuario), { replace: true });
       }, 1500);
     } catch (err: any) {
-      setError(err?.response?.data?.error || err?.message || 'Error al registrar el usuario.');
+      console.error('Register error:', err);
+      if (err.code === 'ERR_NETWORK') {
+        setError('Error de conexión. Verifica tu internet o que el servidor esté activo.');
+      } else if (err.response?.status === 400) {
+        const data = err.response.data;
+        const messages: string[] = [];
+        if (data && typeof data === 'object') {
+          Object.keys(data).forEach((key) => {
+            const msgs = data[key];
+            if (Array.isArray(msgs)) {
+              // Traducir claves comunes si es posible, o mostrarlas tal cual
+              const field = key === 'non_field_errors' ? '' : `${key}: `;
+              messages.push(`${field}${msgs.join(' ')}`);
+            } else if (typeof msgs === 'string') {
+              messages.push(msgs);
+            }
+          });
+        }
+        setError(messages.length > 0 ? messages.join(' | ') : 'Datos inválidos. Por favor revisa el formulario.');
+      } else if (err.response?.status >= 500) {
+        setError('Error interno del servidor. Inténtalo más tarde.');
+      } else {
+        setError(err?.message || 'Error desconocido al registrar el usuario.');
+      }
     }
   };
 
