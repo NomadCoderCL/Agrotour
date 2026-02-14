@@ -47,7 +47,8 @@
           "merchantIdentifier": "merchant.com.nomadcodercl.agrotour",
           "enableGooglePay": true
         }
-      ]
+      ],
+      "expo-sqlite"
     ],
     "experiments": {
       "typedRoutes": true,

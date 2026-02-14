@@ -1,10 +1,24 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { View, Text, StyleSheet, Alert, ActivityIndicator, TouchableOpacity } from 'react-native';
 import { useStripe } from '@stripe/stripe-react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { apiClient } from '../../shared/api';
 import { useCart } from '../../contexts/CartContext';
 import { useAuth } from '../../contexts/AuthContext';
+import { paymentService } from '../../services/PaymentService'; // Importar el servicio
+
+const STRINGS = {
+    title: 'Finalizar Compra',
+    totalToPay: 'Total a pagar: $',
+    payWithCard: 'Pagar con Tarjeta',
+    paymentInProgress: 'Procesando...',
+    error: 'Error',
+    success: 'Éxito',
+    paymentError: 'No se pudo iniciar el pago',
+    paymentSuccess: 'Su pago fue procesado correctamente',
+    missingSaleError: 'Error: No se especificó una venta.',
+    merchantName: 'Agrotour',
+    defaultCustomerName: 'Cliente Agrotour',
+};
 
 export default function CheckoutScreen() {
     const { initPaymentSheet, presentPaymentSheet } = useStripe();
@@ -17,37 +31,39 @@ export default function CheckoutScreen() {
     const ventaId = params.ventaId ? Number(params.ventaId) : null;
     const monto = params.monto ? Number(params.monto) : 0;
 
-    useEffect(() => {
-        initializePaymentSheet();
-    }, []);
-
-    const initializePaymentSheet = async () => {
+    const initializePaymentSheet = useCallback(async () => {
         if (!ventaId) return;
 
         setLoading(true);
         try {
-            const { client_secret, publishable_key } = await apiClient.post<{ client_secret: string; publishable_key: string }>('/api/payments/create-intent/', { venta_id: ventaId });
+            // Usar el nuevo servicio de pagos
+            const { client_secret } = await paymentService.createPaymentIntent({ venta_id: ventaId });
+
+            const customerName = user?.first_name ? `${user.first_name} ${user.last_name}` : STRINGS.defaultCustomerName;
 
             const { error } = await initPaymentSheet({
-                merchantDisplayName: "Agrotour",
+                merchantDisplayName: STRINGS.merchantName,
                 paymentIntentClientSecret: client_secret,
                 defaultBillingDetails: {
-                    name: user?.first_name ? `${user.first_name} ${user.last_name}` : 'Cliente Agrotour',
+                    name: customerName,
                 },
                 returnURL: 'agrotourmobile://stripe-redirect',
             });
 
             if (error) {
-                Alert.alert('Error', error.message);
-            } else {
-                setLoading(false);
+                Alert.alert(STRINGS.error, error.message);
             }
         } catch (error) {
             console.error(error);
-            Alert.alert('Error', 'No se pudo iniciar el pago');
+            Alert.alert(STRINGS.error, STRINGS.paymentError);
+        } finally {
             setLoading(false);
         }
-    };
+    }, [ventaId, user, initPaymentSheet]);
+
+    useEffect(() => {
+        initializePaymentSheet();
+    }, [initializePaymentSheet]);
 
     const openPaymentSheet = async () => {
         const { error } = await presentPaymentSheet();
@@ -55,32 +71,32 @@ export default function CheckoutScreen() {
         if (error) {
             Alert.alert(`Error code: ${error.code}`, error.message);
         } else {
-            Alert.alert('Éxito', 'Su pago fue procesado correctamente');
+            Alert.alert(STRINGS.success, STRINGS.paymentSuccess);
             clearCart();
-            router.replace('/(tabs)/orders'); // Navigate to Orders history
+            router.replace('/(tabs)/orders' as any); // Navigate to Orders history
         }
     };
 
     if (!ventaId) {
         return (
             <View style={styles.container}>
-                <Text style={styles.errorText}>Error: No se especificó una venta.</Text>
+                <Text style={styles.errorText}>{STRINGS.missingSaleError}</Text>
             </View>
         );
     }
 
     return (
         <View style={styles.container}>
-            <Text style={styles.title}>Finalizar Compra</Text>
-            <Text style={styles.subtitle}>Total a pagar: ${monto.toLocaleString('es-CL')}</Text>
+            <Text style={styles.title}>{STRINGS.title}</Text>
+            <Text style={styles.subtitle}>{STRINGS.totalToPay}{monto.toLocaleString('es-CL')}</Text>
 
-            {loading ? (
-                <ActivityIndicator size="large" color="#2A9D8F" />
-            ) : (
-                <TouchableOpacity style={styles.button} onPress={openPaymentSheet}>
-                    <Text style={styles.buttonText}>Pagar con Tarjeta</Text>
-                </TouchableOpacity>
-            )}
+            <TouchableOpacity style={[styles.button, loading && styles.buttonDisabled]} onPress={openPaymentSheet} disabled={loading}>
+                {loading ? (
+                    <ActivityIndicator size="small" color="#fff" />
+                ) : (
+                    <Text style={styles.buttonText}>{STRINGS.payWithCard}</Text>
+                )}
+            </TouchableOpacity>
         </View>
     );
 }
@@ -115,6 +131,11 @@ const styles = StyleSheet.create({
         borderRadius: 8,
         width: '100%',
         alignItems: 'center',
+        flexDirection: 'row',
+        justifyContent: 'center',
+    },
+    buttonDisabled: {
+        backgroundColor: '#A9A9A9',
     },
     buttonText: {
         color: '#fff',

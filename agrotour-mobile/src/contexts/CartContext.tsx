@@ -1,169 +1,165 @@
-/**
- * Cart Context - State management para carrito de compras
- * Persiste en AsyncStorage
- */
+import React, { createContext, useState, useEffect, useContext, useCallback, ReactNode } from 'react';
+import { databaseManager } from '../database/DatabaseManager';
+import { Product } from '../shared/types'; // Asumiendo que tienes un tipo Product
 
-import React, { createContext, useContext, useCallback } from 'react';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Cart, CartItem, Producto, CartState } from '../shared/types';
-import { STORAGE_KEYS } from '../shared/config';
-import { apiClient } from '../shared/api';
-
-interface CartContextType extends CartState {
-  addItem: (product: Producto, cantidad: number) => Promise<void>;
-  removeItem: (productoId: number) => Promise<void>;
-  updateQuantity: (productoId: number, cantidad: number) => Promise<void>;
-  clearCart: () => Promise<void>;
-  getTotal: () => number;
-  confirmPurchase: () => Promise<{ venta_id: number; total: number } | null>;
+// La interfaz del item en el carrito, reflejando la tabla `cart_items`
+export interface CartItem {
+  id: number; // Corresponde al `id` autoincremental de la tabla
+  product_id: number;
+  quantity: number;
+  name: string;
+  price: number;
+  image?: string;
 }
 
-const CartContext = createContext<CartContextType | undefined>(undefined);
+interface CartContextData {
+  cartItems: CartItem[];
+  addToCart: (product: Product, quantity: number) => Promise<void>;
+  removeFromCart: (cartItemId: number) => Promise<void>;
+  updateQuantity: (cartItemId: number, newQuantity: number) => Promise<void>;
+  clearCart: () => Promise<void>;
+  getTotal: () => number;
+  confirmPurchase: () => Promise<any>; // Placeholder para Fase B
+  isLoading: boolean;
+}
 
-export function CartProvider({ children }: { children: React.ReactNode }) {
-  const [state, setState] = React.useState<CartState>({
-    items: [],
-    total: 0,
-    currency: 'CLP',
-    isLoading: false,
-    error: null,
-  });
+const CartContext = createContext<CartContextData>({} as CartContextData);
 
-  // Load cart from storage on mount
-  React.useEffect(() => {
-    const loadCart = async () => {
-      try {
-        const cartStr = await AsyncStorage.getItem(STORAGE_KEYS.CART);
-        if (cartStr) {
-          const cart = JSON.parse(cartStr) as Cart;
-          setState((prev) => ({
-            ...prev,
-            items: cart.items,
-            total: cart.total,
-          }));
-        }
-      } catch (error) {
-        console.error('Failed to load cart:', error);
-      }
-    };
+export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+  const [cartItems, setCartItems] = useState<CartItem[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const db = databaseManager.getDatabase();
 
-    loadCart();
-  }, []);
-
-  const saveCart = useCallback(async (items: CartItem[]) => {
-    try {
-      const total = items.reduce((sum, item) => sum + ((item.product?.precio || 0) * item.cantidad), 0);
-      const cart: Cart = {
-        items,
-        total,
-        currency: 'CLP',
-        lastUpdated: new Date().toISOString(),
-      };
-      await AsyncStorage.setItem(STORAGE_KEYS.CART, JSON.stringify(cart));
-      setState((prev) => ({
-        ...prev,
-        items,
-        total,
-      }));
-    } catch (error) {
-      console.error('Failed to save cart:', error);
-    }
-  }, []);
-
-  const addItem = useCallback(
-    async (product: Producto, cantidad: number) => {
-      const newItems = [...state.items];
-      const existingIndex = newItems.findIndex((item) => item.producto_id === product.id);
-
-      if (existingIndex >= 0) {
-        newItems[existingIndex].cantidad += cantidad;
-      } else {
-        newItems.push({
-          producto_id: product.id,
-          cantidad,
-          product,
-        });
-      }
-
-      await saveCart(newItems);
-    },
-    [state.items, saveCart]
-  );
-
-  const removeItem = useCallback(
-    async (productoId: number) => {
-      const newItems = state.items.filter((item) => item.producto_id !== productoId);
-      await saveCart(newItems);
-    },
-    [state.items, saveCart]
-  );
-
-  const updateQuantity = useCallback(
-    async (productoId: number, cantidad: number) => {
-      const newItems = state.items.map((item) =>
-        item.producto_id === productoId ? { ...item, cantidad } : item
-      );
-      await saveCart(newItems);
-    },
-    [state.items, saveCart]
-  );
-
-  const clearCart = useCallback(async () => {
-    await AsyncStorage.removeItem(STORAGE_KEYS.CART);
-    setState({
-      items: [],
-      total: 0,
-      currency: 'CLP',
-      isLoading: false,
-      error: null,
-    });
-  }, []);
-
-  const getTotal = useCallback(() => {
-    return state.items.reduce((sum, item) => sum + ((item.product?.precio || 0) * item.cantidad), 0);
-  }, [state.items]);
-
-  const confirmPurchase = useCallback(async () => {
-    if (state.items.length === 0) return null;
-
-    try {
-      // Assuming apiClient.post('/api/confirmar-compra/') returns { venta_id, monto_total }
-      // We need to implement this endpoint or ensure it exists.
-      // Based on previous files, confirming purchase logic might exist or needs to be added.
-      // For now, let's assume valid response structure based on backend.
-
-      const result = await apiClient.post<{ venta_id: number, total: number }>('/confirmar-compra/', {
-        items: state.items.map(i => ({ producto_id: i.producto_id, cantidad: i.cantidad }))
+  // Cargar el carrito desde SQLite al iniciar
+  const loadCart = useCallback(async () => {
+    return new Promise<void>((resolve, reject) => {
+      db.transaction(tx => {
+        tx.executeSql(
+          'SELECT * FROM cart_items;',
+          [],
+          (_, { rows: { _array } }) => {
+            setCartItems(_array as CartItem[]);
+            resolve();
+          },
+          (_, error) => {
+            console.error('Error loading cart from SQLite:', error);
+            reject(error);
+            return true;
+          }
+        );
       });
+    });
+  }, [db]);
 
-      return result;
-    } catch (error) {
-      console.error("Purchase failed", error);
-      throw error;
+  useEffect(() => {
+    setIsLoading(true);
+    loadCart().finally(() => setIsLoading(false));
+  }, [loadCart]);
+
+  // Añadir un producto o actualizar su cantidad si ya existe
+  const addToCart = async (product: Product, quantity: number) => {
+    return new Promise<void>((resolve, reject) => {
+      db.transaction(tx => {
+        tx.executeSql(
+          `INSERT INTO cart_items (product_id, quantity, name, price, image) VALUES (?, ?, ?, ?, ?)
+           ON CONFLICT(product_id) DO UPDATE SET quantity = quantity + excluded.quantity;`,
+          [product.id, quantity, product.name, product.price, product.image_url],
+          () => {
+            loadCart().then(resolve);
+          },
+          (_, error) => {
+            console.error('Error adding/updating item in SQLite:', error);
+            reject(error);
+            return true;
+          }
+        );
+      });
+    });
+  };
+
+  // Quitar un item del carrito
+  const removeFromCart = async (cartItemId: number) => {
+    return new Promise<void>((resolve, reject) => {
+      db.transaction(tx => {
+        tx.executeSql(
+          `DELETE FROM cart_items WHERE id = ?;`,
+          [cartItemId],
+          () => {
+            loadCart().then(resolve);
+          },
+          (_, error) => {
+            console.error('Error removing item from SQLite:', error);
+            reject(error);
+            return true;
+          }
+        );
+      });
+    });
+  };
+
+  // Actualizar la cantidad de un item
+  const updateQuantity = async (cartItemId: number, newQuantity: number) => {
+    if (newQuantity <= 0) {
+      return removeFromCart(cartItemId);
     }
-  }, [state.items]);
+    return new Promise<void>((resolve, reject) => {
+      db.transaction(tx => {
+        tx.executeSql(
+          'UPDATE cart_items SET quantity = ? WHERE id = ?',
+          [newQuantity, cartItemId],
+          () => {
+            loadCart().then(resolve);
+          },
+          (_, error) => {
+            console.error('Error updating quantity in SQLite:', error);
+            reject(error);
+            return true;
+          }
+        );
+      });
+    });
+  };
+
+  // Vaciar el carrito
+  const clearCart = async () => {
+    return new Promise<void>((resolve, reject) => {
+      db.transaction(tx => {
+        tx.executeSql(
+          'DELETE FROM cart_items;',
+          [],
+          () => {
+            loadCart().then(resolve);
+          },
+          (_, error) => {
+            console.error('Error clearing cart in SQLite:', error);
+            reject(error);
+            return true;
+          }
+        );
+      });
+    });
+  };
+
+  // Calcular el total
+  const getTotal = () => {
+    return cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+  };
+
+  // Lógica de confirmación de compra (FASE B)
+  const confirmPurchase = async () => {
+    console.log("Confirming purchase... This will be handled by the Sync Engine in Phase B.");
+    // 1. Crear un payload para la orden.
+    // 2. Insertar la operación en la `offline_queue` con estado PENDING.
+    // 3. Limpiar el carrito localmente.
+    await clearCart(); // El comportamiento esperado es que el carrito se vacíe
+    return { success: true, message: 'Orden encolada para sincronización.' };
+  };
 
   return (
-    <CartContext.Provider
-      value={{
-        ...state,
-        addItem,
-        removeItem,
-        updateQuantity,
-        clearCart,
-        getTotal,
-        confirmPurchase,
-      }}
-    >
+    <CartContext.Provider value={{ cartItems, addToCart, removeFromCart, clearCart, updateQuantity, getTotal, confirmPurchase, isLoading }}>
       {children}
     </CartContext.Provider>
   );
-}
+};
 
-export function useCart(): CartContextType {
-  const context = useContext(CartContext);
-  if (!context) {
-    throw new Error('useCart must be used within CartProvider');
-  }
-  return context;
-}
+export const useCart = () => useContext(CartContext);

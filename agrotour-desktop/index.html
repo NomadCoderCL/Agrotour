@@ -2,34 +2,20 @@
 <html lang="es">
 
 <head>
-  <meta charset="UTF-8" />
-  <link rel="stylesheet" href="styles.css" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Agrotour AI Assistant</title>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Agrotour Desktop</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Montserrat:wght@600;700;800&display=swap"
+        rel="stylesheet">
 </head>
 
 <body>
-  <div class="container">
-    <header>
-      <h1>🤖 Asistente IA Agrotour</h1>
-      <p class="subtitle">Modelo: Qwen2.5-3B (Offline) | Asegúrate de tener Ollama corriendo</p>
-    </header>
-
-    <div id="messages-container" class="messages-container"></div>
-
-    <div class="actions">
-      <button id="analyze-button" class="btn btn-success">
-        📊 Analizar Stock (Demo)
-      </button>
-    </div>
-
-    <div class="input-container">
-      <input id="message-input" type="text" placeholder="Escribe tu pregunta..." class="message-input" />
-      <button id="send-button" class="btn btn-primary">Enviar</button>
-    </div>
-  </div>
-
-  <script type="module" src="/src/main.ts"></script>
+    <div id="root"></div>
+    <script type="module" src="/src/index.tsx"></script>
 </body>
 
 </html>
