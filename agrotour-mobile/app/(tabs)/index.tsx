@@ -14,7 +14,7 @@ import { Producto } from '@/shared/types';
 export default function HomeScreen() {
   const { colors } = useDarkMode();
   const { user, isLoading: authLoading } = useAuth();
-  const { items: cartItems } = useCart();
+  const { cartItems } = useCart();
   const router = useRouter();
 
   const [featuredProducts, setFeaturedProducts] = useState<Producto[]>([]);

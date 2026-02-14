@@ -1,51 +1,30 @@
-import { View, ScrollView, StyleSheet, Text, TouchableOpacity, FlatList, TextInput } from 'react-native';
+import { View, StyleSheet, Text, TouchableOpacity, FlatList, TextInput } from 'react-native';
 import { useEffect, useState } from 'react';
 import { Ionicons } from '@expo/vector-icons';
 
 import { useDarkMode } from '@/contexts/DarkModeContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCart } from '@/contexts/CartContext';
-import { dataService } from '@/services/DataService';
+import { useProducts } from '@/contexts/ProductContext'; // 1. Importar el nuevo hook
 import { LoadingSpinner, ErrorMessage } from '@/components/UI';
-import { globalErrorStore } from '@/services/GlobalErrorStore';
-import { Producto } from '@/shared/types';
+import { Product } from '@/shared/types';
 
-export default function ProductosScreen() {
+// Componente principal de la pantalla de productos
+function ProductosScreenContent() {
   const { colors } = useDarkMode();
   const { user } = useAuth();
-  const { addItem } = useCart();
+  const { addToCart } = useCart();
 
-  const [productos, setProductos] = useState<Producto[]>([]);
-  const [filteredProducts, setFilteredProducts] = useState<Producto[]>([]);
+  // 2. Consumir el estado desde ProductContext
+  const { products, isLoading, error, forceSync } = useProducts();
+
+  const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [selectedFilter, setSelectedFilter] = useState<'all' | 'disponible'>('all');
 
+  // El filtrado ahora reacciona a los cambios en `products` del contexto
   useEffect(() => {
-    loadProducts();
-  }, []);
-
-  useEffect(() => {
-    filterProducts();
-  }, [searchQuery, selectedFilter, productos]);
-
-  const loadProducts = async () => {
-    try {
-      setIsLoading(true);
-      setError(null);
-      const products = await dataService.getProducts();
-      setProductos(products);
-    } catch (err) {
-      globalErrorStore.setError('NETWORK_ERROR', 'No se pudieron cargar los productos');
-      console.error(err);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const filterProducts = () => {
-    let filtered = productos;
+    let filtered = products;
 
     if (selectedFilter === 'disponible') {
       filtered = filtered.filter((p) => p.stock > 0);
@@ -53,82 +32,48 @@ export default function ProductosScreen() {
 
     if (searchQuery.trim()) {
       filtered = filtered.filter((p) =>
-        p.nombre.toLowerCase().includes(searchQuery.toLowerCase())
+        p.name.toLowerCase().includes(searchQuery.toLowerCase())
       );
     }
 
     setFilteredProducts(filtered);
-  };
+  }, [searchQuery, selectedFilter, products]);
 
-  const handleAddToCart = (product: Producto) => {
+  const handleAddToCart = (product: Product) => {
     if (product.stock > 0) {
-      addItem(product, 1);
+      addToCart(product, 1);
+      // Opcional: Mostrar una confirmación al usuario
     }
   };
 
-  const renderProductCard = ({ item }: { item: Producto }) => (
-    <View
-      style={[
-        styles.productCard,
-        { backgroundColor: colors.surface, borderColor: colors.border },
-      ]}
-    >
+  const renderProductCard = ({ item }: { item: Product }) => (
+    <View style={[styles.productCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
       <View style={[styles.productImage, { backgroundColor: colors.background }]}>
         <Text style={styles.productEmoji}>🌾</Text>
       </View>
-
       <View style={styles.productContent}>
-        <Text style={[styles.productName, { color: colors.text }]} numberOfLines={2}>
-          {item.nombre}
-        </Text>
-
-        {item.descripcion && (
-          <Text
-            style={[styles.productDescription, { color: colors.textSecondary }]}
-            numberOfLines={2}
-          >
-            {item.descripcion}
-          </Text>
+        <Text style={[styles.productName, { color: colors.text }]} numberOfLines={2}>{item.name}</Text>
+        {item.description && (
+          <Text style={[styles.productDescription, { color: colors.textSecondary }]} numberOfLines={2}>{item.description}</Text>
         )}
-
         <View style={styles.productFooter}>
           <View>
-            <Text style={[styles.productPrice, { color: colors.primary }]}>
-              ${item.precio}
-            </Text>
-            {item.stock > 0 && (
-              <Text style={[styles.stock, { color: colors.textSecondary }]}>
-                Stock: {item.stock}
-              </Text>
-            )}
-            {item.stock === 0 && (
-              <Text style={[styles.outOfStock, { color: colors.primary + '99' }]}>
-                Agotado
-              </Text>
+            <Text style={[styles.productPrice, { color: colors.primary }]}>${item.price}</Text>
+            {item.stock > 0 ? (
+              <Text style={[styles.stock, { color: colors.textSecondary }]}>Stock: {item.stock}</Text>
+            ) : (
+              <Text style={[styles.outOfStock, { color: colors.primary + '99' }]}>Agotado</Text>
             )}
           </View>
-
           {user?.rol === 'cliente' && (
             <TouchableOpacity
-              style={[
-                styles.addButton,
-                {
-                  backgroundColor:
-                    item.stock > 0 ? colors.primary : colors.primary + '33',
-                },
-              ]}
+              style={[styles.addButton, { backgroundColor: item.stock > 0 ? colors.primary : colors.primary + '33' }]}
               onPress={() => handleAddToCart(item)}
               disabled={item.stock === 0}
               activeOpacity={0.7}
             >
               <Ionicons name="add" size={20} color="white" />
             </TouchableOpacity>
-          )}
-
-          {(user?.rol === 'productor' || user?.rol === 'admin') && (
-            <View style={styles.producerBadge}>
-              <Ionicons name="checkmark-circle" size={20} color={colors.primary} />
-            </View>
           )}
         </View>
       </View>
@@ -137,7 +82,6 @@ export default function ProductosScreen() {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      {/* Search and Filter */}
       <View style={[styles.searchBar, { backgroundColor: colors.surface, borderColor: colors.border }]}>
         <Ionicons name="search" size={20} color={colors.textSecondary} />
         <TextInput
@@ -154,93 +98,53 @@ export default function ProductosScreen() {
         )}
       </View>
 
-      {/* Filter Buttons */}
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.filterContainer}
-      >
-        <TouchableOpacity
-          style={[
-            styles.filterButton,
-            {
-              backgroundColor:
-                selectedFilter === 'all' ? colors.primary : colors.surface,
-              borderColor: colors.border,
-            },
-          ]}
-          onPress={() => setSelectedFilter('all')}
-        >
-          <Text
-            style={[
-              styles.filterText,
-              { color: selectedFilter === 'all' ? 'white' : colors.text },
-            ]}
-          >
-            Todos
-          </Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={[
-            styles.filterButton,
-            {
-              backgroundColor:
-                selectedFilter === 'disponible' ? colors.primary : colors.surface,
-              borderColor: colors.border,
-            },
-          ]}
-          onPress={() => setSelectedFilter('disponible')}
-        >
-          <Text
-            style={[
-              styles.filterText,
-              {
-                color:
-                  selectedFilter === 'disponible' ? 'white' : colors.text,
-              },
-            ]}
-          >
-            Disponibles
-          </Text>
-        </TouchableOpacity>
-      </ScrollView>
-
-      {/* Results */}
-      {isLoading && <LoadingSpinner />}
-      {error && <ErrorMessage message={error} onRetry={loadProducts} />}
-
-      {!isLoading && !error && (
-        <>
-          <Text style={[styles.resultCount, { color: colors.textSecondary }]}>
-            {filteredProducts.length} producto{filteredProducts.length !== 1 ? 's' : ''}
-          </Text>
-
-          {filteredProducts.length === 0 ? (
+      <FlatList
+        data={filteredProducts}
+        renderItem={renderProductCard}
+        keyExtractor={(item) => item.id.toString()}
+        ListHeaderComponent={() => (
+          <View style={styles.filterContainer}>
+             <TouchableOpacity
+                style={[styles.filterButton, { backgroundColor: selectedFilter === 'all' ? colors.primary : colors.surface, borderColor: colors.border }]}
+                onPress={() => setSelectedFilter('all')}
+             >
+                <Text style={[styles.filterText, { color: selectedFilter === 'all' ? 'white' : colors.text }]}>Todos</Text>
+             </TouchableOpacity>
+             <TouchableOpacity
+                style={[styles.filterButton, { backgroundColor: selectedFilter === 'disponible' ? colors.primary : colors.surface, borderColor: colors.border }]}
+                onPress={() => setSelectedFilter('disponible')}
+             >
+                <Text style={[styles.filterText, { color: selectedFilter === 'disponible' ? 'white' : colors.text }]}>Disponibles</Text>
+             </TouchableOpacity>
+          </View>
+        )}
+        ListEmptyComponent={() => (
+          !isLoading && (
             <View style={styles.emptyState}>
-              <Ionicons
-                name="leaf-outline"
-                size={48}
-                color={colors.textSecondary}
-              />
-              <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
-                No se encontraron productos
-              </Text>
+              <Ionicons name="leaf-outline" size={48} color={colors.textSecondary} />
+              <Text style={[styles.emptyText, { color: colors.textSecondary }]}>No se encontraron productos</Text>
             </View>
-          ) : (
-            <FlatList
-              data={filteredProducts}
-              renderItem={renderProductCard}
-              keyExtractor={(item) => item.id.toString()}
-              contentContainerStyle={styles.listContent}
-              scrollEnabled={false}
-            />
-          )}
-        </>
-      )}
+          )
+        )}
+        contentContainerStyle={styles.listContent}
+        onRefresh={forceSync} // Pull-to-refresh
+        refreshing={isLoading}
+      />
+
+      {isLoading && products.length === 0 && <LoadingSpinner />}
+      {error && <ErrorMessage message={error} onRetry={forceSync} />}
     </View>
   );
 }
+
+// 3. Envolver la pantalla con el Provider
+export default function ProductosScreen() {
+  return (
+    // No necesitamos envolverlo aquí si ya está en un layout superior
+    <ProductosScreenContent />
+  );
+}
+
 
 const styles = StyleSheet.create({
   container: {
@@ -262,8 +166,9 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   filterContainer: {
+    flexDirection: 'row',
     paddingHorizontal: 16,
-    paddingVertical: 8,
+    paddingBottom: 12,
     gap: 8,
   },
   filterButton: {
@@ -276,32 +181,28 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
   },
-  resultCount: {
-    marginHorizontal: 16,
-    marginTop: 8,
-    fontSize: 12,
-    fontWeight: '500',
-  },
   listContent: {
     paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingBottom: 12,
     gap: 12,
   },
   productCard: {
     borderRadius: 12,
     borderWidth: 1,
     overflow: 'hidden',
-    marginBottom: 4,
+    flexDirection: 'row',
   },
   productImage: {
-    height: 120,
+    width: 100,
+    height: '100%',
     justifyContent: 'center',
     alignItems: 'center',
   },
   productEmoji: {
-    fontSize: 50,
+    fontSize: 40,
   },
   productContent: {
+    flex: 1,
     padding: 12,
   },
   productName: {
@@ -317,6 +218,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-end',
+    marginTop: 'auto',
   },
   productPrice: {
     fontSize: 18,
@@ -337,14 +239,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  producerBadge: {
-    width: 40,
-    height: 40,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
   emptyState: {
     flex: 1,
+    paddingVertical: 50,
     justifyContent: 'center',
     alignItems: 'center',
   },

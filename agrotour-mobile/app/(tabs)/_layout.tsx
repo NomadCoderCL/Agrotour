@@ -4,6 +4,7 @@ import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 
 import { useDarkMode } from '@/contexts/DarkModeContext';
 import { useAuth } from '@/contexts/AuthContext';
+import { SyncStatusIndicator } from '@/components/SyncStatusIndicator'; // 1. Importar el componente
 
 export default function TabLayout() {
   const { colors } = useDarkMode();
@@ -39,6 +40,8 @@ export default function TabLayout() {
           fontWeight: '500',
           marginBottom: 4,
         },
+        // 2. Añadir el indicador al header
+        headerRight: () => <SyncStatusIndicator />,
       }}>
       {/* Home Tab */}
       <Tabs.Screen

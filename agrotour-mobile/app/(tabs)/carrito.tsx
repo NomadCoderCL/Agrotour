@@ -12,15 +12,19 @@ import { Button } from '../../src/components/UI';
 
 export default function CarritoScreen() {
   const { colors } = useDarkMode();
-  const { items, total, removeItem, updateQuantity, clearCart, confirmPurchase } = useCart();
+  const { cartItems, getTotal, removeFromCart, updateQuantity, clearCart, confirmPurchase } = useCart();
   const router = useRouter();
   const [isCheckingOut, setIsCheckingOut] = useState(false);
+
+  // useCart exposes cartItems directly
+  const items = cartItems;
+  const total = getTotal();
 
   const handleQuantityChange = (itemId: number, newQuantity: number) => {
     if (newQuantity > 0) {
       updateQuantity(itemId, newQuantity);
     } else {
-      removeItem(itemId);
+      removeFromCart(itemId);
     }
   };
 
@@ -30,22 +34,20 @@ export default function CarritoScreen() {
     setIsCheckingOut(true);
     try {
       const result = await confirmPurchase();
-      if (result) {
-        // Navigate to CheckoutScreen with params
-        router.push({
-          pathname: "/screens/checkout/CheckoutScreen",
-          params: { ventaId: result.venta_id, monto: result.total }
-        });
+      if (result && result.success) {
+        // Offline Flow: Order Saved
+        alert('Pedido guardado localmente (Modo Offline). Se sincronizará cuando haya internet.');
+        // Don't navigate to Stripe checkout as we don't have a backend ID yet
+        // Just refresh/stay or go to orders logic
       }
     } catch (error) {
       console.error("Checkout error:", error);
-      // ErrorToast will handle the display via GlobalErrorStore or we can show an alert here
     } finally {
       setIsCheckingOut(false);
     }
   };
 
-  const renderCartItem = ({ item }: { item: CartItem }) => (
+  const renderCartItem = ({ item }: { item: any }) => (
     <View
       style={[
         styles.cartItem,
@@ -58,29 +60,29 @@ export default function CarritoScreen() {
 
       <View style={styles.itemDetails}>
         <Text style={[styles.itemName, { color: colors.text }]}>
-          {item.product?.nombre || 'Producto desconocido'}
+          {item.name || 'Producto'}
         </Text>
         <Text style={[styles.itemPrice, { color: colors.primary }]}>
-          ${(item.product?.precio || 0).toLocaleString()}
+          ${(item.price || 0).toLocaleString()}
         </Text>
       </View>
 
       <View style={styles.quantityControl}>
         <TouchableOpacity
           style={[styles.quantityButton, { borderColor: colors.border }]}
-          onPress={() => handleQuantityChange(item.producto_id, item.cantidad - 1)}
+          onPress={() => handleQuantityChange(item.id, item.quantity - 1)}
           activeOpacity={0.6}
         >
           <Ionicons name="remove" size={16} color={colors.text} />
         </TouchableOpacity>
 
         <Text style={[styles.quantity, { color: colors.text }]}>
-          {item.cantidad}
+          {item.quantity}
         </Text>
 
         <TouchableOpacity
           style={[styles.quantityButton, { borderColor: colors.border }]}
-          onPress={() => handleQuantityChange(item.producto_id, item.cantidad + 1)}
+          onPress={() => handleQuantityChange(item.id, item.quantity + 1)}
           activeOpacity={0.6}
         >
           <Ionicons name="add" size={16} color={colors.text} />
@@ -89,7 +91,7 @@ export default function CarritoScreen() {
 
       <TouchableOpacity
         style={styles.removeButton}
-        onPress={() => removeItem(item.producto_id)}
+        onPress={() => removeFromCart(item.id)}
         activeOpacity={0.6}
       >
         <Ionicons name="trash-outline" size={18} color={colors.primary} />
@@ -119,7 +121,7 @@ export default function CarritoScreen() {
           <FlatList
             data={items}
             renderItem={renderCartItem}
-            keyExtractor={(item) => item.producto_id.toString()}
+            keyExtractor={(item) => item.id.toString()}
             contentContainerStyle={styles.listContent}
             scrollEnabled={false}
           />

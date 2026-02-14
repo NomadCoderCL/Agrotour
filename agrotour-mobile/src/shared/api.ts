@@ -10,7 +10,7 @@ import axios, {
   AxiosResponse,
 } from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { API_BASE_URL, STORAGE_KEYS, REQUEST_TIMEOUT, TOKEN_REFRESH_BUFFER, ENDPOINTS } from './config';
+import { API_BASE_URL, STORAGE_KEYS, REQUEST_TIMEOUT, TOKEN_REFRESH_BUFFER } from './config';
 import { APIException, APIError } from './types';
 import { globalErrorStore } from '../services/GlobalErrorStore';
 
@@ -191,7 +191,7 @@ class APIClient {
   }
 
   /**
-   * Set authorization token manualmente
+   * Set authorization token manually
    */
   setToken(token: string): void {
     AsyncStorage.setItem(STORAGE_KEYS.AUTH_TOKEN, token);
@@ -204,52 +204,6 @@ class APIClient {
     const token = await AsyncStorage.getItem(STORAGE_KEYS.AUTH_TOKEN);
     return !!token;
   }
-
-  /**
-   * POST request - Create Order
-   */
-  async createOrder<T = any>(data: any): Promise<T> {
-    try {
-      const response = await this.client.post<T>(
-        ENDPOINTS.CART.CREATE_ORDER,
-        data
-      );
-      return response.data;
-    } catch (error) {
-      throw this.handleError(error);
-    }
-  }
-
-  /**
-   * POST request - Register FCM Token
-   */
-  async registerFCMToken<T = any>(data: { token: string; platform: string }): Promise<T> {
-    try {
-      const response = await this.client.post<T>(
-        ENDPOINTS.FCM.REGISTER_TOKEN,
-        data
-      );
-      return response.data;
-    } catch (error) {
-      throw this.handleError(error);
-    }
-  }
-
-  /**
-   * POST request - Unregister FCM Token
-   */
-  async unregisterFCMToken<T = any>(data: { token: string }): Promise<T> {
-    try {
-      const response = await this.client.post<T>(
-        ENDPOINTS.FCM.UNREGISTER_TOKEN,
-        data
-      );
-      return response.data;
-    } catch (error) {
-      throw this.handleError(error);
-    }
-  }
-
 }
 
 // Singleton instance

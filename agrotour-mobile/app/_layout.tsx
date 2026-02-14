@@ -3,16 +3,14 @@ import { StatusBar } from "expo-status-bar";
 import { StripeProvider } from '@stripe/stripe-react-native';
 import "react-native-reanimated";
 
-import { AuthProvider } from "@/contexts/AuthContext";
-import { CartProvider } from "@/contexts/CartContext";
+import { AppProviders } from "@/contexts/AppProviders"; // 1. Importar AppProviders
 import { SyncProvider } from "@/contexts/SyncContext";
-import { DarkModeProvider } from "@/contexts/DarkModeContext";
 import { PushNotificationProvider } from "@/contexts/PushNotificationContext";
 import { GlobalErrorBoundary } from "@/components/GlobalErrorBoundary";
 import { ErrorToast } from "@/components/ErrorToast";
 
 export const unstable_settings = {
-  anchor: "(tabs)",
+  initialRouteName: "(tabs)",
 };
 
 function RootLayoutContent() {
@@ -28,23 +26,22 @@ function RootLayoutContent() {
 }
 
 export default function RootLayout() {
+  const publishableKey = process.env.EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY || "";
+
   return (
     <StripeProvider
-      publishableKey="pk_test_51Q59wF2N3O4aV8Z6qL9iX7jR1K2m3n4o5p6q7r8s9t0" // Replace with env var later
-      merchantIdentifier="merchant.com.nomadcodercl.agrotour" // optional
+      publishableKey={publishableKey}
+      merchantIdentifier="merchant.com.nomadcodercl.agrotour" // Opcional
     >
-      <DarkModeProvider>
-        <AuthProvider>
-          <CartProvider>
-            <SyncProvider>
-              <PushNotificationProvider>
-                <RootLayoutContent />
-                <StatusBar style="auto" />
-              </PushNotificationProvider>
-            </SyncProvider>
-          </CartProvider>
-        </AuthProvider>
-      </DarkModeProvider>
+      {/* 2. Usar el componente centralizado de providers */}
+      <AppProviders>
+        <SyncProvider>
+          <PushNotificationProvider>
+            <RootLayoutContent />
+            <StatusBar style="auto" />
+          </PushNotificationProvider>
+        </SyncProvider>
+      </AppProviders>
     </StripeProvider>
   );
 }

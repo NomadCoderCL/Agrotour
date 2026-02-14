@@ -15,9 +15,10 @@ export interface CartOperation {
  * Mantiene un registro de operaciones para sincronizar después
  */
 export function useCartWithSync() {
-  const { addItem, updateQuantity, removeItem, clearCart, items } = useCart();
-  const itemCount = items.reduce((count: number, item: any) => count + (item.cantidad || 0), 0);
-  const totalPrice = items.reduce((sum: number, item: any) => sum + ((item.precio || 0) * (item.cantidad || 0)), 0);
+  const { addToCart, updateQuantity, removeFromCart, clearCart, cartItems } = useCart();
+  const items = cartItems;
+  const itemCount = items.reduce((count: number, item: any) => count + (item.quantity || 0), 0);
+  const totalPrice = items.reduce((sum: number, item: any) => sum + ((item.price || 0) * (item.quantity || 0)), 0);
   const { addSyncOperation, isSyncing, pendingCount } = useSync();
   const [operationHistory, setOperationHistory] = useState<CartOperation[]>([]);
 
@@ -27,9 +28,9 @@ export function useCartWithSync() {
   };
 
   // Agregar item al carrito y registrar para sync
-  const addItemWithSync = async (product: any, quantity: number) => {
+  const addToCartWithSync = async (product: any, quantity: number) => {
     try {
-      await addItem(product, quantity);
+      await addToCart(product, quantity);
 
       const operation: CartOperation = {
         type: 'add',
@@ -45,7 +46,7 @@ export function useCartWithSync() {
         action: 'add',
         product_id: product.id,
         quantity,
-        price: product.precio, // String from API
+        price: product.price,
       });
     } catch (err) {
       globalErrorStore.setError('NETWORK_ERROR', 'No se pudo agregar el producto', { error: String(err) });
@@ -54,13 +55,13 @@ export function useCartWithSync() {
   };
 
   // Actualizar cantidad y sincronizar
-  const updateQuantityWithSync = async (productId: number, newQuantity: number) => {
+  const updateQuantityWithSync = async (cartId: number, newQuantity: number) => {
     try {
-      await updateQuantity(productId, newQuantity);
+      await updateQuantity(cartId, newQuantity);
 
       const operation: CartOperation = {
         type: 'update',
-        productId,
+        productId: cartId, // Note: cartId usually maps to product if distinct, but here we treat as ID
         quantity: newQuantity,
         timestamp: Date.now(),
       };
@@ -70,7 +71,7 @@ export function useCartWithSync() {
       // Registrar en sync queue
       await addSyncOperation('cart_item', {
         action: 'update',
-        product_id: productId,
+        product_id: cartId,
         quantity: newQuantity,
       });
     } catch (err) {
@@ -80,13 +81,13 @@ export function useCartWithSync() {
   };
 
   // Remover item y sincronizar
-  const removeItemWithSync = async (productId: number) => {
+  const removeFromCartWithSync = async (cartId: number) => {
     try {
-      await removeItem(productId);
+      await removeFromCart(cartId);
 
       const operation: CartOperation = {
         type: 'remove',
-        productId,
+        productId: cartId,
         timestamp: Date.now(),
       };
 
@@ -95,7 +96,7 @@ export function useCartWithSync() {
       // Registrar en sync queue
       await addSyncOperation('cart_item', {
         action: 'remove',
-        product_id: productId,
+        product_id: cartId,
       });
     } catch (err) {
       globalErrorStore.setError('NETWORK_ERROR', 'No se pudo remover el producto', { error: String(err) });
@@ -132,10 +133,10 @@ export function useCartWithSync() {
     totalPrice,
     operationHistory,
 
-    // Operaciones con sync
-    addItem: addItemWithSync,
+    // Operaciones con sync (Updated names)
+    addToCart: addToCartWithSync,
     updateQuantity: updateQuantityWithSync,
-    removeItem: removeItemWithSync,
+    removeFromCart: removeFromCartWithSync,
     clearCart: clearCartWithSync,
 
     // Estado de sincronización
@@ -149,8 +150,9 @@ export function useCartWithSync() {
  * Hook para validar estado del carrito antes de checkout
  */
 export function useCartValidation() {
-  const { items } = useCart();
-  const totalPrice = items.reduce((sum: number, item: any) => sum + ((item.precio || 0) * (item.cantidad || 0)), 0);
+  const { cartItems } = useCart();
+  const items = cartItems;
+  const totalPrice = items.reduce((sum: number, item: any) => sum + ((item.price || 0) * (item.quantity || 0)), 0);
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
 
   const validate = (): boolean => {
@@ -195,7 +197,8 @@ export function useCartValidation() {
  * Calcular totales con precisión decimal
  */
 export function useCartTotals() {
-  const { items } = useCart();
+  const { cartItems } = useCart();
+  const items = cartItems;
 
   const calculations = {
     subtotal: items.reduce((sum, item: any) => {

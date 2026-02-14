@@ -59,7 +59,7 @@ Agrotour/
 │   ├── agrotour_backend/ # Configuración y Celery
 │   └── aplicacion/      # Modelos, Vistas y Lógica de Negocio
 ├── backend-sync/       # Motor de Sincronización (FastAPI)
-├── frontend2/          # Aplicación Web (React)
+├── frontend/           # Aplicación Web (React)
 └── README.md           # Documentación Principal
 ```
 
@@ -89,7 +89,7 @@ Agrotour/
 
 4. **Frontend (React):**
    ```bash
-   cd frontend2
+   cd frontend
    npm install
    npm run start
    ```

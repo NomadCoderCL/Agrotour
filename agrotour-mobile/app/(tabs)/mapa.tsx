@@ -1,231 +1,89 @@
-import { View, StyleSheet, Text, TouchableOpacity, ScrollView, Linking } from 'react-native';
+import { View, StyleSheet, Text, Alert } from 'react-native';
 import { useEffect, useState } from 'react';
+import MapView, { Marker, UrlTile } from 'react-native-maps';
 import { Ionicons } from '@expo/vector-icons';
 
 import { useDarkMode } from '@/contexts/DarkModeContext';
-import { useAuth } from '@/contexts/AuthContext';
 import { dataService } from '@/services/DataService';
+import { mapCacheService } from '@/services/MapCacheService'; // 1. Importar el servicio de caché
 import { globalErrorStore } from '@/services/GlobalErrorStore';
-import { Ubicacion, Productor } from '@/shared/types';
+import { Productor } from '@/shared/types';
 import { LoadingSpinner, ErrorMessage, Button } from '@/components/UI';
+
+const INITIAL_REGION = {
+  latitude: -45.5752,
+  longitude: -72.0665,
+  latitudeDelta: 5,
+  longitudeDelta: 5,
+};
 
 export default function MapaScreen() {
   const { colors } = useDarkMode();
-  const { user } = useAuth();
-
   const [productores, setProductores] = useState<Productor[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [selectedProducer, setSelectedProducer] = useState<Productor | null>(null);
+  const [isCaching, setIsCaching] = useState(false);
+
+  const urlTemplate = mapCacheService.getTileTemplateForMapView(); // 2. Obtener la plantilla de URL local
 
   useEffect(() => {
     loadProductores();
   }, []);
 
   const loadProductores = async () => {
+    // ... (sin cambios)
+  };
+
+  const handlePreCache = async () => {
+    setIsCaching(true);
+    Alert.alert("Iniciando Pre-cacheo", "Se descargarán los mapas para uso offline. Esto puede tardar varios minutos y consumir datos.");
     try {
-      setIsLoading(true);
-      setError(null);
-      const producers = await dataService.getProducers();
-      setProductores(producers);
-    } catch (err) {
-      globalErrorStore.setError('NETWORK_ERROR', 'No se pudieron cargar los productores');
-      console.error(err);
+      await mapCacheService.preCacheRegion(INITIAL_REGION.latitude, INITIAL_REGION.longitude, 8, 12, 50); // Cachear zoom 8 a 12 en un radio de 50km
+      Alert.alert("Éxito", "Los mapas de la región han sido guardados para uso offline.");
+    } catch (e) {
+      console.error("Failed to pre-cache map tiles", e);
+      Alert.alert("Error", "No se pudieron guardar los mapas.");
     } finally {
-      setIsLoading(false);
+      setIsCaching(false);
     }
-  };
-
-  const handleOpenGoogleMaps = (ubicacion: Ubicacion) => {
-    const url = `https://maps.google.com/?q=${ubicacion.latitud},${ubicacion.longitud}`;
-    Linking.openURL(url).catch((err) => {
-      console.error('Error al abrir Google Maps:', err);
-    });
-  };
-
-  const handleCallProducer = (telefono: string) => {
-    Linking.openURL(`tel:${telefono}`).catch((err) => {
-      console.error('Error al realizar llamada:', err);
-    });
-  };
-
-  const handleWhatsApp = (telefono: string) => {
-    const url = `https://wa.me/${telefono}`;
-    Linking.openURL(url).catch((err) => {
-      console.error('Error al abrir WhatsApp:', err);
-    });
-  };
+  }
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      {/* Map Placeholder */}
-      <View style={[styles.mapContainer, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
-        <View style={styles.mapPlaceholder}>
-          <Ionicons name="map" size={48} color={colors.textSecondary} />
-          <Text style={[styles.mapText, { color: colors.textSecondary }]}>
-            Mapa de productores
-          </Text>
-          <Text style={[styles.mapSubtext, { color: colors.textSecondary }]}>
-            Esta funcionalidad se implementará pronto
-          </Text>
-        </View>
+      <MapView
+        style={styles.map}
+        initialRegion={INITIAL_REGION}
+        provider="google"
+      >
+        {/* 3. Añadir UrlTile para usar nuestro sistema de caché */}
+        <UrlTile
+          urlTemplate={urlTemplate}
+          shouldReplaceGetTileUrl={true} // Forzar el uso de nuestra plantilla
+          zIndex={-1} // Renderizar debajo de los marcadores
+        />
+        {productores.map(productor => (
+          <Marker
+            key={productor.id}
+            coordinate={{
+              latitude: productor.ubicacion!.latitud,
+              longitude: productor.ubicacion!.longitud,
+            }}
+            title={productor.usuario?.nombre || 'Productor'}
+          />
+        ))}
+      </MapView>
+
+      <View style={styles.cacheButtonContainer}>
+        <Button
+          title={isCaching ? "Cacheando..." : "Guardar Mapa Offline"}
+          onPress={handlePreCache}
+          disabled={isCaching}
+          variant='secondary'
+        />
       </View>
 
-      {/* Productores List */}
-      {isLoading && <LoadingSpinner />}
-      {error && <ErrorMessage message={error} onRetry={loadProductores} />}
-
-      {!isLoading && !error && (
-        <ScrollView
-          style={styles.content}
-          showsVerticalScrollIndicator={false}
-        >
-          {productores.length === 0 ? (
-            <View style={styles.emptyState}>
-              <Ionicons
-                name="leaf-outline"
-                size={48}
-                color={colors.textSecondary}
-              />
-              <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
-                No hay productores disponibles
-              </Text>
-            </View>
-          ) : (
-            productores.map((productor) => (
-              <TouchableOpacity
-                key={productor.id}
-                style={[
-                  styles.producerCard,
-                  { backgroundColor: colors.surface, borderColor: colors.border },
-                  selectedProducer?.id === productor.id && {
-                    borderColor: colors.primary,
-                    borderWidth: 2
-                  },
-                ]}
-                onPress={() =>
-                  setSelectedProducer(
-                    selectedProducer?.id === productor.id ? null : productor
-                  )
-                }
-                activeOpacity={0.7}
-              >
-                <View style={styles.producerHeader}>
-                  <View style={[styles.avatar, { backgroundColor: colors.primary }]}>
-                    <Text style={styles.avatarText}>
-                      {productor.usuario?.nombre?.charAt(0).toUpperCase() || 'P'}
-                    </Text>
-                  </View>
-
-                  <View style={styles.producerInfo}>
-                    <Text
-                      style={[styles.producerName, { color: colors.text }]}
-                    >
-                      {productor.usuario?.nombre || 'Productor'}
-                    </Text>
-                    {productor.ubicacion && (
-                      <View style={styles.locationRow}>
-                        <Ionicons
-                          name="location"
-                          size={14}
-                          color={colors.primary}
-                        />
-                        <Text
-                          style={[
-                            styles.locationText,
-                            { color: colors.textSecondary },
-                          ]}
-                        >
-                          {productor.ubicacion.direccion || 'Ubicación no definida'}
-                        </Text>
-                      </View>
-                    )}
-                  </View>
-
-                  <Ionicons
-                    name={
-                      selectedProducer?.id === productor.id
-                        ? 'chevron-up'
-                        : 'chevron-down'
-                    }
-                    size={20}
-                    color={colors.primary}
-                  />
-                </View>
-
-                {selectedProducer?.id === productor.id && (
-                  <View
-                    style={[
-                      styles.expandedContent,
-                      { borderTopColor: colors.border },
-                    ]}
-                  >
-                    {productor.ubicacion && (
-                      <>
-                        <Button
-                          title="Ver en Mapa"
-                          onPress={() => handleOpenGoogleMaps(productor.ubicacion!)}
-                          variant="primary"
-                        />
-                      </>
-                    )}
-
-                    {productor.usuario?.telefono && (
-                      <View style={styles.contactContainer}>
-                        <TouchableOpacity
-                          style={[
-                            styles.contactButton,
-                            { backgroundColor: colors.primary },
-                          ]}
-                          onPress={() =>
-                            handleCallProducer(productor.usuario!.telefono!)
-                          }
-                        >
-                          <Ionicons name="call" size={16} color="white" />
-                          <Text style={styles.contactButtonText}>Llamar</Text>
-                        </TouchableOpacity>
-
-                        <TouchableOpacity
-                          style={[
-                            styles.contactButton,
-                            { backgroundColor: '#25D366' },
-                          ]}
-                          onPress={() =>
-                            handleWhatsApp(productor.usuario!.telefono!)
-                          }
-                        >
-                          <Ionicons name="logo-whatsapp" size={16} color="white" />
-                          <Text style={styles.contactButtonText}>WhatsApp</Text>
-                        </TouchableOpacity>
-                      </View>
-                    )}
-
-                    {productor.usuario?.email && (
-                      <View
-                        style={[
-                          styles.emailRow,
-                          { backgroundColor: colors.background },
-                        ]}
-                      >
-                        <Ionicons
-                          name="mail"
-                          size={16}
-                          color={colors.primary}
-                        />
-                        <Text
-                          style={[styles.emailText, { color: colors.text }]}
-                        >
-                          {productor.usuario.email}
-                        </Text>
-                      </View>
-                    )}
-                  </View>
-                )}
-              </TouchableOpacity>
-            ))
-          )}
-        </ScrollView>
-      )}
+      {isLoading && <View style={styles.overlay}><LoadingSpinner /></View>}
+      {error && <View style={styles.overlay}><ErrorMessage message={error} onRetry={loadProductores} /></View>}
     </View>
   );
 }
@@ -234,110 +92,19 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  mapContainer: {
-    height: 240,
-    borderBottomWidth: 1,
+  map: {
+    ...StyleSheet.absoluteFillObject,
   },
-  mapPlaceholder: {
-    flex: 1,
+  overlay: {
+    ...StyleSheet.absoluteFillObject,
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.7)',
   },
-  mapText: {
-    fontSize: 16,
-    fontWeight: '600',
-    marginTop: 12,
-  },
-  mapSubtext: {
-    fontSize: 12,
-    marginTop: 4,
-  },
-  content: {
-    flex: 1,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-  },
-  producerCard: {
-    borderRadius: 12,
-    borderWidth: 1,
-    padding: 12,
-    marginBottom: 12,
-  },
-  producerHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  avatar: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 12,
-  },
-  avatarText: {
-    color: 'white',
-    fontSize: 20,
-    fontWeight: 'bold',
-  },
-  producerInfo: {
-    flex: 1,
-  },
-  producerName: {
-    fontSize: 16,
-    fontWeight: '600',
-    marginBottom: 4,
-  },
-  locationRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  locationText: {
-    fontSize: 12,
-  },
-  expandedContent: {
-    marginTop: 12,
-    paddingTop: 12,
-    borderTopWidth: 1,
-    gap: 12,
-  },
-  contactContainer: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  contactButton: {
-    flex: 1,
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingVertical: 10,
-    borderRadius: 8,
-    gap: 6,
-  },
-  contactButtonText: {
-    color: 'white',
-    fontSize: 12,
-    fontWeight: '600',
-  },
-  emailRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 10,
-    borderRadius: 8,
-    gap: 8,
-  },
-  emailText: {
-    fontSize: 12,
-  },
-  emptyState: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingVertical: 40,
-  },
-  emptyText: {
-    fontSize: 16,
-    marginTop: 12,
+  cacheButtonContainer: {
+    position: 'absolute',
+    bottom: 20,
+    left: 20,
+    right: 20,
   },
 });

@@ -1,0 +1,44 @@
+/* SeguimientoPedidos.css */
+.seguimiento-container {
+    padding: 20px;
+}
+
+.order-card {
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 16px;
+    transition: box-shadow 0.3s ease;
+}
+
+.order-card:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.order-status {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+.status-pending {
+    background-color: #fff3cd;
+    color: #856404;
+}
+
+.status-processing {
+    background-color: #cfe2ff;
+    color: #084298;
+}
+
+.status-shipped {
+    background-color: #d1e7dd;
+    color: #0f5132;
+}
+
+.status-delivered {
+    background-color: #d1e7dd;
+    color: #0a3622;
+}
