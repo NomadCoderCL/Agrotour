@@ -37,10 +37,26 @@ ALLOWED_HOSTS = ['*']
 
 # CORS
 # CORS
-CORS_ALLOW_ALL_ORIGINS = True
+# CORS
+CORS_ALLOW_ALL_ORIGINS = False  # Must be False when ALLOW_CREDENTIALS is True
 CORS_ALLOW_CREDENTIALS = True
-# If you want to be specific:
-# CORS_ALLOWED_ORIGINS = ["https://agrotour.vercel.app"]
+CORS_ALLOWED_ORIGINS = [
+    "https://agrotour.vercel.app",
+    "https://agrotour-fxvnno4mb-nomadcodercls-projects.vercel.app", # Vercel Preview
+    "http://localhost:5173",
+    "http://localhost:3000",
+]
+CORS_ALLOW_HEADERS = [
+    'accept',
+    'accept-encoding',
+    'authorization',
+    'content-type',
+    'dnt',
+    'origin',
+    'user-agent',
+    'x-csrftoken',
+    'x-requested-with',
+]
 
 # CSRF
 CSRF_TRUSTED_ORIGINS = [
