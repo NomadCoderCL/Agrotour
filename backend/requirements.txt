@@ -1,5 +1,5 @@
 # Django Core
-Django>=5.2.11
+Django>=4.2.0
 djangorestframework
 django-environ
 
