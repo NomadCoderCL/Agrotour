@@ -6,6 +6,7 @@
 import React, { ReactNode, useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { registerServiceWorker, setupConnectivityListener } from '@/services';
+import { config } from '@/config/env';
 import { OfflineIndicator, SyncStatus, ErrorBoundary } from '@/components/ui';
 import DarkModeToggle from '@/components/ui/DarkModeToggle';
 import NotificationCenter from '@/components/ui/NotificationCenter';
@@ -199,7 +200,7 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
     const init = async () => {
       try {
         // Registrar Service Worker
-        if (import.meta.env.REACT_APP_ENABLE_SERVICE_WORKER !== 'false') {
+        if (config.enableServiceWorker) {
           await registerServiceWorker();
           logger.info('Service Worker registered');
         }

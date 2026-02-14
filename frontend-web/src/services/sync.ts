@@ -13,6 +13,7 @@ import {
   OperationType,
   EntityType,
 } from "@/types/models";
+import { config } from "@/config/env";
 
 const logger = getLogger("SyncClient");
 
@@ -249,6 +250,20 @@ export class SyncClient {
   get isSyncing(): boolean {
     return this._isSyncing;
   }
+
+  /**
+   * Iniciar sincronización automática
+   */
+  startAutoSync(): void {
+    if (config.syncInterval > 0) {
+      logger.info(`Starting auto-sync every ${config.syncInterval}ms`);
+      setInterval(() => {
+        if (!this._isSyncing) {
+          this.syncPush().catch(err => logger.error("Auto-sync failed", err));
+        }
+      }, config.syncInterval);
+    }
+  }
 }
 
 /**
@@ -283,7 +298,10 @@ export function createHash(str: string): string {
 
 // Singleton
 export const syncClient = new SyncClient(
-  import.meta.env.VITE_DEVICE_ID || "web_1"
+  config.deviceId
 );
+
+// Iniciar auto-sync si está configurado
+syncClient.startAutoSync();
 
 export default SyncClient;

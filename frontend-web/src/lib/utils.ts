@@ -1,5 +1,6 @@
 import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
+import { config } from "@/config/env";
 
 // Combina clases de manera eficiente
 export function cn(...inputs: ClassValue[]) {
@@ -7,7 +8,7 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 // Para Create React App:
-export const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+export const API_URL = config.apiUrl;
 
 export function getAuthHeaders(): Record<string, string> {
   const accessToken = localStorage.getItem('access_token');

@@ -3,7 +3,8 @@
  * Evita que toda la app se caiga por un error en un componente
  */
 
-import React, { ReactNode } from 'react';
+import React, { Component, ErrorInfo, ReactNode } from 'react';
+import { config } from '@/config/env';
 import getLogger from '@/lib/logger';
 
 const logger = getLogger('ErrorBoundary');
@@ -53,7 +54,7 @@ export class ErrorBoundary extends React.Component<Props, State> {
             <p className="text-gray-700 dark:text-gray-300 mb-4">
               Algo salió mal. El error ha sido registrado.
             </p>
-            {import.meta.env.MODE === 'development' && (
+            {config.environment === 'development' && (
               <details className="text-xs text-red-600 dark:text-red-400">
                 <summary>Detalles del error (Dev)</summary>
                 <pre className="mt-2 overflow-auto max-h-40 bg-gray-100 dark:bg-gray-800 p-2 rounded">

@@ -19,6 +19,8 @@ import {
   Producto,
 } from "@/types/models";
 
+import { config } from "@/config/env";
+
 interface RetryConfig {
   maxRetries: number;
   delayMs: number;
@@ -26,8 +28,8 @@ interface RetryConfig {
 }
 
 const DEFAULT_RETRY_CONFIG: RetryConfig = {
-  maxRetries: 3,
-  delayMs: 1000,
+  maxRetries: config.retryAttempts,
+  delayMs: config.retryDelay,
   backoffMultiplier: 2,
 };
 
@@ -41,7 +43,7 @@ class ApiClient {
 
   constructor(baseURL?: string, retryConfig?: Partial<RetryConfig>) {
     // Vite usa import.meta.env, asegúrate de tener VITE_API_URL en tu .env
-    let API_BASE_URL = baseURL || import.meta.env.VITE_API_URL || "http://localhost:8000";
+    let API_BASE_URL = baseURL || config.apiUrl;
 
     // Sanitize: Remove trailing slash and any accidental port/junk like :1
     // Si la URL termina en :1 (error común de copy-paste en Vercel envs), lo quitamos.
@@ -49,7 +51,7 @@ class ApiClient {
 
     this.axiosInstance = axios.create({
       baseURL: API_BASE_URL,
-      timeout: 15000, // Subí un poco el timeout para móviles/3G
+      timeout: config.apiTimeout, // Subí un poco el timeout para móviles/3G
       headers: {
         "Content-Type": "application/json",
       },
