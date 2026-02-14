@@ -44,12 +44,19 @@ CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOWED_ORIGINS = [
     "https://agrotour.vercel.app",
     "http://localhost:5173",
+    "http://127.0.0.1:5173",
 ]
 
-# Regex para permitir subdominios de Vercel de este proyecto (Preview URLs)
-CORS_ALLOWED_ORIGIN_REGEXES = [
-    r"^https://.*\.vercel\.app$",  # ← ESTO es clave
-]
+# Configuración de Previews segura (Controlada por variable de entorno)
+ENABLE_CORS_PREVIEW = os.environ.get('ENABLE_CORS_PREVIEW', 'false').lower() == 'true'
+
+if ENABLE_CORS_PREVIEW:
+    CORS_ALLOWED_ORIGIN_REGEXES = [
+        # Permite previews con o sin sufijo de proyecto
+        r"^https://agrotour-[a-z0-9]+(?:-nomadcodercls-projects)?\.vercel\.app$",
+    ]
+else:
+    CORS_ALLOWED_ORIGIN_REGEXES = []
 
 # Métodos HTTP permitidos
 CORS_ALLOW_METHODS = [
@@ -71,18 +78,25 @@ CORS_ALLOW_HEADERS = [
     "x-requested-with",
 ]
 
+# Limitar CORS solo a rutas API y Auth
+CORS_URLS_REGEX = r'^/(api|auth)/.*$'
+
 # ============================================
 # CSRF CONFIGURATION
 # ============================================
 
 CSRF_TRUSTED_ORIGINS = [
     "https://agrotour.vercel.app",
-    "https://*.vercel.app",
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
 ]
+
+# trust render domain for internal health checks if needed
+CSRF_TRUSTED_ORIGINS.append("https://*.onrender.com")
 
 # Configuración para Cross-Origin Cookies (Vital para auth)
 CSRF_COOKIE_SECURE = True
-CSRF_COOKIE_HTTPONLY = False  # False para que JS pueda leer el token si es necesario
+CSRF_COOKIE_HTTPONLY = False
 CSRF_COOKIE_SAMESITE = 'None'
 
 # ============================================
@@ -95,7 +109,7 @@ SESSION_COOKIE_HTTPONLY = True
 
 # SECURITY HEADERS
 # ----------------
-SECURE_CROSS_ORIGIN_OPENER_POLICY = None  # Si usas OAuth popups
+SECURE_CROSS_ORIGIN_OPENER_POLICY = None
 
 
 
