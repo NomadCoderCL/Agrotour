@@ -279,7 +279,8 @@ const VisitasGuiadas = () => {
           </div>
         </div>
       </div>
-      );
+    </div>
+  );
 };
 
-      export default VisitasGuiadas;
+export default VisitasGuiadas;
