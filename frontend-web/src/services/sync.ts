@@ -12,7 +12,7 @@ import {
   SyncConflict,
   OperationType,
   EntityType,
-} from "../types/models";
+} from "@/types/models";
 
 const logger = getLogger("SyncClient");
 
@@ -110,6 +110,8 @@ export class SyncClient {
 
       const payload: SyncPushPayload = {
         operations: pendingOps,
+        device_id: this.deviceId,
+        client_version: "1.0.0",
       };
 
       const response = await apiClient.syncPush(payload);
@@ -189,7 +191,8 @@ export class SyncClient {
       logger.info("Starting sync pull", { since });
 
       const response = await apiClient.syncPull({
-        since_lamport_ts: since,
+        since_lamport_ts: since || 0,
+        since_version: 0,
         limit: 100,
       });
 
@@ -280,7 +283,7 @@ export function createHash(str: string): string {
 
 // Singleton
 export const syncClient = new SyncClient(
-  import.meta.env.REACT_APP_DEVICE_ID || "web_1"
+  import.meta.env.VITE_DEVICE_ID || "web_1"
 );
 
 export default SyncClient;

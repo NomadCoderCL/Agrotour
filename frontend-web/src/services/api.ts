@@ -1,6 +1,6 @@
 /**
- * HTTP Client con Retry Automático
- * Maneja sincronización con /sync/push y otras APIs
+ * HTTP Client Optimizado para Agrotour
+ * Correcciones: Rutas, Bucle Infinito, Singleton, Tipos
  */
 
 import axios, {
@@ -8,15 +8,16 @@ import axios, {
   AxiosError,
   InternalAxiosRequestConfig,
 } from "axios";
+
 import {
-  SyncOperation,
   SyncPushPayload,
   SyncPushResponse,
   SyncPullPayload,
   SyncPullResponse,
   AuthResponse,
   TokenPayload,
-} from "../types/models";
+  Producto,
+} from "@/types/models";
 
 interface RetryConfig {
   maxRetries: number;
@@ -26,8 +27,8 @@ interface RetryConfig {
 
 const DEFAULT_RETRY_CONFIG: RetryConfig = {
   maxRetries: 3,
-  delayMs: 1000, // 1s inicial
-  backoffMultiplier: 2, // exponential: 1s → 2s → 4s
+  delayMs: 1000,
+  backoffMultiplier: 2,
 };
 
 class ApiClient {
@@ -35,33 +36,27 @@ class ApiClient {
   private accessToken: string | null = null;
   private refreshToken: string | null = null;
   private retryConfig: RetryConfig;
+  private isRefreshing: boolean = false; // Semáforo para evitar bucles
+  private failedQueue: any[] = []; // Cola de peticiones esperando token nuevo
 
   constructor(baseURL?: string, retryConfig?: Partial<RetryConfig>) {
+    // Vite usa import.meta.env, asegúrate de tener VITE_API_URL en tu .env
     const API_BASE_URL = baseURL || import.meta.env.VITE_API_URL || "http://localhost:8000";
 
     this.axiosInstance = axios.create({
       baseURL: API_BASE_URL,
-      timeout: 10000,
+      timeout: 15000, // Subí un poco el timeout para móviles/3G
       headers: {
         "Content-Type": "application/json",
       },
     });
 
     this.retryConfig = { ...DEFAULT_RETRY_CONFIG, ...retryConfig };
-
-    // Cargar tokens del localStorage
     this.loadTokens();
-
-    // Interceptor para agregar Authorization header
     this.setupRequestInterceptor();
-
-    // Interceptor para manejar 401 (token expirado)
     this.setupResponseInterceptor();
   }
 
-  /**
-   * Cargar tokens del localStorage
-   */
   private loadTokens(): void {
     try {
       const stored = localStorage.getItem("auth_tokens");
@@ -71,13 +66,10 @@ class ApiClient {
         this.refreshToken = tokens.refresh;
       }
     } catch (error) {
-      console.warn("Error loading tokens from localStorage", error);
+      console.warn("Error loading tokens", error);
     }
   }
 
-  /**
-   * Guardar tokens en localStorage
-   */
   private saveTokens(accessToken: string, refreshToken: string): void {
     this.accessToken = accessToken;
     this.refreshToken = refreshToken;
@@ -87,9 +79,6 @@ class ApiClient {
     );
   }
 
-  /**
-   * Interceptor: Agregar Authorization header
-   */
   private setupRequestInterceptor(): void {
     this.axiosInstance.interceptors.request.use(
       (config: InternalAxiosRequestConfig) => {
@@ -102,116 +91,106 @@ class ApiClient {
     );
   }
 
-  /**
-   * Interceptor: Manejar 401 con refresh token
-   */
   private setupResponseInterceptor(): void {
     this.axiosInstance.interceptors.response.use(
       (response) => response,
       async (error: AxiosError) => {
-        const originalRequest = error.config as InternalAxiosRequestConfig & {
-          _retry?: boolean;
-        };
+        const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
 
-        // Si 401 y tiene refresh token, intentar refrescar
-        if (
-          error.response?.status === 401 &&
-          this.refreshToken &&
-          !originalRequest._retry
-        ) {
+        // Manejo de 401 (Unauthorized)
+        if (error.response?.status === 401 && !originalRequest._retry) {
+          if (this.isRefreshing) {
+            // Si ya estamos refrescando, poner en cola
+            return new Promise((resolve, reject) => {
+              this.failedQueue.push({ resolve, reject });
+            })
+              .then((token) => {
+                originalRequest.headers.Authorization = `Bearer ${token}`;
+                return this.axiosInstance(originalRequest);
+              })
+              .catch((err) => Promise.reject(err));
+          }
+
           originalRequest._retry = true;
+          this.isRefreshing = true;
 
           try {
-            const response = await this.axiosInstance.post<TokenPayload>(
-              "/auth/token/refresh/",
+            // IMPORTANTE: Usamos una instancia NUEVA de axios para evitar el interceptor
+            // y evitar el bucle infinito.
+            const response = await axios.post<TokenPayload>(
+              `${this.axiosInstance.defaults.baseURL}/auth/token/refresh/`,
               { refresh: this.refreshToken }
             );
 
             const { access, refresh } = response.data;
             this.saveTokens(access, refresh);
 
-            // Reintentar request original con nuevo token
+            // Procesar la cola de peticiones fallidas
+            this.processQueue(null, access);
+            this.isRefreshing = false;
+
+            // Reintentar la original
             originalRequest.headers.Authorization = `Bearer ${access}`;
             return this.axiosInstance(originalRequest);
+
           } catch (refreshError) {
-            // Refresh falló, limpiar tokens y redirigir a login
-            this.accessToken = null;
-            this.refreshToken = null;
-            localStorage.removeItem("auth_tokens");
+            this.processQueue(refreshError, null);
+            this.isRefreshing = false;
+            this.logout(); // Limpia todo
+            // Redirección segura
             window.location.href = "/login";
             return Promise.reject(refreshError);
           }
         }
-
         return Promise.reject(error);
       }
     );
   }
 
-  /**
-   * Retry automático con exponential backoff
-   */
-  private async retryWithBackoff<T>(
-    fn: () => Promise<T>,
-    retryCount: number = 0
-  ): Promise<T> {
+  // Procesa la cola de peticiones que esperaban el refresh
+  private processQueue(error: any, token: string | null = null) {
+    this.failedQueue.forEach((prom) => {
+      if (error) {
+        prom.reject(error);
+      } else {
+        prom.resolve(token);
+      }
+    });
+    this.failedQueue = [];
+  }
+
+  // --- RETRY LOGIC (Simplificada) ---
+  private async retryWithBackoff<T>(fn: () => Promise<T>, retryCount = 0): Promise<T> {
     try {
       return await fn();
     } catch (error) {
-      if (
-        retryCount < this.retryConfig.maxRetries &&
-        this.isRetryableError(error as AxiosError)
-      ) {
-        const delay =
-          this.retryConfig.delayMs *
-          Math.pow(this.retryConfig.backoffMultiplier, retryCount);
-        console.log(
-          `Retry attempt ${retryCount + 1}/${this.retryConfig.maxRetries} after ${delay}ms`
-        );
-        await this.sleep(delay);
+      // No reintentar si es 401 (eso lo maneja el interceptor) o 400 (error del usuario)
+      if (retryCount < this.retryConfig.maxRetries && this.isRetryableError(error as AxiosError)) {
+        const delay = this.retryConfig.delayMs * Math.pow(this.retryConfig.backoffMultiplier, retryCount);
+        // console.log(`Retry attempt ${retryCount + 1}/${this.retryConfig.maxRetries} after ${delay}ms`);
+        await new Promise((r) => setTimeout(r, delay));
         return this.retryWithBackoff(fn, retryCount + 1);
       }
       throw error;
     }
   }
 
-  /**
-   * Determinar si un error es reintentable
-   */
   private isRetryableError(error: AxiosError): boolean {
     const status = error.response?.status;
-
-    // Reintenta en timeouts, 429 (rate limit), 5xx
-    if (!status) return true; // Network error
-    return (
-      status === 408 || // Request timeout
-      status === 429 || // Too Many Requests
-      (status >= 500 && status < 600) // Server errors
-    );
+    // Reintentar errores de red (status undefined) o errores de servidor (5xx)
+    return !status || (status >= 500 && status < 600) || status === 429;
   }
 
-  /**
-   * Sleep helper
-   */
-  private sleep(ms: number): Promise<void> {
-    return new Promise((resolve) => setTimeout(resolve, ms));
-  }
+  // --- MÉTODOS PÚBLICOS (Rutas Corregidas) ---
 
-  /**
-   * ==================
-   * AUTENTICACIÓN
-   * ==================
-   */
+  // ==================
+  // AUTENTICACIÓN
+  // ==================
 
   async login(username: string, password: string): Promise<AuthResponse> {
-    return this.retryWithBackoff(() =>
-      this.axiosInstance
-        .post<AuthResponse>("/auth/login/", { username, password })
-        .then((res) => {
-          this.saveTokens(res.data.access, res.data.refresh);
-          return res.data;
-        })
-    );
+    const res = await this.axiosInstance.post<AuthResponse>("/auth/login/", { username, password });
+    this.saveTokens(res.data.access, res.data.refresh);
+    return res.data;
   }
 
   async register(
@@ -231,6 +210,7 @@ class ApiClient {
     this.accessToken = null;
     this.refreshToken = null;
     localStorage.removeItem("auth_tokens");
+    // Opcional: Llamar al backend para blacklistear el refresh token
   }
 
   async validateToken(): Promise<{ message: string }> {
@@ -239,17 +219,13 @@ class ApiClient {
     );
   }
 
-  /**
-   * ==================
-   * PRODUCTOS
-   * ==================
-   */
+  // ==================
+  // PRODUCTOS
+  // ==================
 
   async getProductos(filters?: Record<string, any>) {
     return this.retryWithBackoff(() =>
-      this.axiosInstance
-        .get("/api/productos/", { params: filters })
-        .then((res) => res.data)
+      this.axiosInstance.get("/api/productos/", { params: filters }).then(r => r.data)
     );
   }
 
@@ -259,17 +235,15 @@ class ApiClient {
     );
   }
 
-  async createProducto(data: any) {
+  async createProducto(data: Partial<Producto>) {
     return this.retryWithBackoff(() =>
       this.axiosInstance.post("/api/productos/", data).then((res) => res.data)
     );
   }
 
-  async updateProducto(id: number, data: any) {
+  async updateProducto(id: number, data: Partial<Producto>) {
     return this.retryWithBackoff(() =>
-      this.axiosInstance
-        .put(`/api/productos/${id}/`, data)
-        .then((res) => res.data)
+      this.axiosInstance.put(`/api/productos/${id}/`, data).then((res) => res.data)
     );
   }
 
@@ -279,31 +253,25 @@ class ApiClient {
     );
   }
 
-  /**
-   * ==================
-   * SYNC ENGINE
-   * ==================
-   */
+  // ==================
+  // SYNC ENGINE
+  // ==================
 
   async syncPush(payload: SyncPushPayload): Promise<SyncPushResponse> {
     return this.retryWithBackoff(() =>
-      this.axiosInstance
-        .post("/api/sync/push/", payload)
-        .then((res) => res.data)
+      this.axiosInstance.post("/api/sync/push/", payload).then(r => r.data)
     );
   }
 
   async syncPull(payload: SyncPullPayload): Promise<SyncPullResponse> {
     return this.retryWithBackoff(() =>
-      this.axiosInstance
-        .post("/api/sync/pull/", payload)
-        .then((res) => res.data)
+      this.axiosInstance.post("/api/sync/pull/", payload).then(r => r.data)
     );
   }
 
   async getConflicts() {
     return this.retryWithBackoff(() =>
-      this.axiosInstance.get("/sync/conflicts/").then((res) => res.data)
+      this.axiosInstance.get("/api/sync/conflicts/").then(r => r.data)
     );
   }
 
@@ -313,16 +281,14 @@ class ApiClient {
   ): Promise<any> {
     return this.retryWithBackoff(() =>
       this.axiosInstance
-        .post(`/sync/conflicts/${conflictId}/resolve/`, { resolution })
+        .post(`/api/sync/conflicts/${conflictId}/resolve/`, { resolution })
         .then((res) => res.data)
     );
   }
 
-  /**
-   * ==================
-   * UBICACIONES
-   * ==================
-   */
+  // ==================
+  // UBICACIONES
+  // ==================
 
   async getUbicaciones() {
     return this.retryWithBackoff(() =>
@@ -332,23 +298,17 @@ class ApiClient {
 
   async getUbicacionesProductores() {
     return this.retryWithBackoff(() =>
-      this.axiosInstance
-        .get("/api/ubicaciones_productores/")
-        .then((res) => res.data)
+      this.axiosInstance.get("/api/ubicaciones_productores/").then((res) => res.data)
     );
   }
 
-  /**
-   * ==================
-   * VENTAS
-   * ==================
-   */
+  // ==================
+  // VENTAS
+  // ==================
 
   async confirmarCompra(carrito: any): Promise<{ venta_id: number; monto_total: number }> {
     return this.retryWithBackoff(() =>
-      this.axiosInstance
-        .post("/api/confirmar-compra/", { carrito })
-        .then((res) => res.data)
+      this.axiosInstance.post("/api/confirmar-compra/", { carrito }).then((res) => res.data)
     );
   }
 
@@ -358,31 +318,25 @@ class ApiClient {
     );
   }
 
-  /**
-   * ==================
-   * BOLETAS
-   * ==================
-   */
+  // ==================
+  // BOLETAS
+  // ==================
 
   async getBoletas() {
     return this.retryWithBackoff(() =>
-      this.axiosInstance.get("/api/boletas/").then((res) => res.data)
+      this.axiosInstance.get("/api/boletas/").then(r => r.data)
     );
   }
 
   async descargarBoletaPDF(boletaId: number): Promise<Blob> {
     return this.retryWithBackoff(() =>
-      this.axiosInstance
-        .get(`/boletas/${boletaId}/pdf/`, { responseType: "blob" })
-        .then((res) => res.data)
+      this.axiosInstance.get(`/api/boletas/${boletaId}/pdf/`, { responseType: "blob" }).then(r => r.data)
     );
   }
 
-  /**
-   * ==================
-   * VISITAS
-   * ==================
-   */
+  // ==================
+  // VISITAS
+  // ==================
 
   async getVisitas() {
     return this.retryWithBackoff(() =>
@@ -402,11 +356,9 @@ class ApiClient {
     );
   }
 
-  /**
-   * ==================
-   * UTIL
-   * ==================
-   */
+  // ==================
+  // UTIL
+  // ==================
 
   isAuthenticated(): boolean {
     return !!this.accessToken;
@@ -419,9 +371,10 @@ class ApiClient {
   setAccessToken(token: string): void {
     this.accessToken = token;
   }
+
+  // Getters útiles
+  get token() { return this.accessToken; }
 }
 
-// Singleton instance
+// Exportamos SOLO la instancia para que sea un verdadero Singleton
 export const apiClient = new ApiClient();
-
-export default ApiClient;
