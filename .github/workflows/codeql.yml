@@ -30,16 +30,15 @@ jobs:
 
     # Inicializa CodeQL
     - name: Initialize CodeQL
-      uses: github/codeql-action/init@v3
+      uses: github/codeql-action/init@v4
       with:
         languages: ${{ matrix.language }}
-        # Configuración fina por lenguaje
-        config-file: .github/codeql/codeql-config.yml  # archivo opcional abajo
+        # Configuración eliminada porque el archivo no existe
 
     # Autobuild (funciona bien para Python y JS/TS)
     - name: Autobuild
-      uses: github/codeql-action/autobuild@v3
+      uses: github/codeql-action/autobuild@v4
 
     # Ejecuta análisis
     - name: Perform CodeQL Analysis
-      uses: github/codeql-action/analyze@v3
+      uses: github/codeql-action/analyze@v4
