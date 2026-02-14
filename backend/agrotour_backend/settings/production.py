@@ -5,6 +5,8 @@ from sentry_sdk.integrations.django import DjangoIntegration
 DEBUG = False
 
 # Security Hardening
+# Security Hardening
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 SECURE_SSL_REDIRECT = True
 SESSION_COOKIE_SECURE = True
 CSRF_COOKIE_SECURE = True
@@ -43,7 +45,8 @@ CORS_ALLOW_CREDENTIALS = True
 # CSRF
 CSRF_TRUSTED_ORIGINS = [
     'https://*.onrender.com',
-    'https://agrotour.vercel.app'
+    'https://agrotour.vercel.app',
+    'https://*.vercel.app'
 ]
 
 # Database
